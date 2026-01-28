@@ -1,0 +1,9 @@
+[build]
+builder = "nixpacks"
+buildCommand = "npm install && npm run build"
+
+[deploy]
+startCommand = "NODE_ENV=production node server.js"
+healthcheckPath = "/api/status"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
