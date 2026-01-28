@@ -17,7 +17,7 @@ const PORT = 3001;
 
 // ===================== CONFIGURATION =====================
 const CONFIG = {
-  API_KEY: 'aUIfwXllHrpVDbCFu9kTuJdWxvwwVALTqeGGC2TLWPY1zF3ZlMed0bYD0iEe5EGM',
+  API_KEY: process.env.BEEHIIV_API_KEY || 'aUIfwXllHrpVDbCFu9kTuJdWxvwwVALTqeGGC2TLWPY1zF3ZlMed0bYD0iEe5EGM',
   API_BASE_URL: 'https://api.beehiiv.com/v2',
   CONTENT_DOMAINS: ['inquisitr.com', 'www.inquisitr.com'],
   RATE_LIMIT_DELAY_MS: 200,
