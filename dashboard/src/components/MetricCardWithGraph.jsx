@@ -240,7 +240,8 @@ export default function MetricCardWithGraph({
   showPreviousDay = false,
   showFilters = true,
   comparisonValue,
-  comparisonValueLabel
+  comparisonValueLabel,
+  metricType = null // 'newSubscribers', 'openRate', 'ctr', 'ctor' - enables recalculation based on time period
 }) {
   const [showInfo, setShowInfo] = useState(false);
   const [chartTimePeriod, setChartTimePeriod] = useState('30day');
@@ -262,19 +263,139 @@ export default function MetricCardWithGraph({
     return val;
   };
 
-  const isPositive = change > 0;
-  const isNegative = change < 0;
-  const changeValue = Math.abs(change || 0);
+  // Filter data based on selected time period
+  const filteredTrendData = useMemo(() => {
+    return filterDataByTimePeriod(trendData, chartTimePeriod, customDateRange);
+  }, [trendData, chartTimePeriod, customDateRange]);
+
+  // Calculate dynamic metric value based on filtered data and metric type
+  const calculatedValue = useMemo(() => {
+    if (!metricType || !filteredTrendData || filteredTrendData.length === 0) {
+      return value; // Return original value if no metricType or no data
+    }
+
+    // Sum up the relevant fields from filtered trend data
+    const totals = filteredTrendData.reduce((acc, day) => {
+      acc.delivered += day.delivered || 0;
+      acc.uniqueOpens += day.uniqueOpens || 0;
+      acc.uniqueClicks += day.uniqueClicks || 0;
+      acc.newSubscribers += day.newSubscribers || 0;
+      return acc;
+    }, { delivered: 0, uniqueOpens: 0, uniqueClicks: 0, newSubscribers: 0 });
+
+    switch (metricType) {
+      case 'newSubscribers':
+        return totals.newSubscribers;
+      case 'openRate':
+        return totals.delivered > 0 ? (totals.uniqueOpens / totals.delivered) * 100 : 0;
+      case 'ctr':
+        return totals.delivered > 0 ? (totals.uniqueClicks / totals.delivered) * 100 : 0;
+      case 'ctor':
+        return totals.uniqueOpens > 0 ? (totals.uniqueClicks / totals.uniqueOpens) * 100 : 0;
+      default:
+        return value;
+    }
+  }, [metricType, filteredTrendData, value]);
+
+  // Calculate change for dynamic value (compare to prior period of same length)
+  const calculatedChange = useMemo(() => {
+    if (!metricType || !trendData || trendData.length === 0) {
+      return change; // Return original change if no metricType
+    }
+
+    // Get the prior period data
+    const periodLength = filteredTrendData.length;
+    if (periodLength === 0) return 0;
+
+    // Find the start date of current period and calculate prior period
+    let priorStartDate, priorEndDate;
+    const now = new Date();
+
+    switch (chartTimePeriod) {
+      case '7day':
+        priorStartDate = subDays(now, 14);
+        priorEndDate = subDays(now, 7);
+        break;
+      case '30day':
+        priorStartDate = subDays(now, 60);
+        priorEndDate = subDays(now, 30);
+        break;
+      case '90day':
+        priorStartDate = subDays(now, 180);
+        priorEndDate = subDays(now, 90);
+        break;
+      case 'mtd':
+        const monthStart = startOfMonth(now);
+        const daysIntoMonth = now.getDate();
+        priorStartDate = subDays(monthStart, daysIntoMonth);
+        priorEndDate = subDays(monthStart, 1);
+        break;
+      case 'ytd':
+        const yearStart = startOfYear(now);
+        const lastYearStart = startOfYear(subDays(yearStart, 1));
+        priorStartDate = lastYearStart;
+        priorEndDate = subDays(yearStart, 1);
+        break;
+      default:
+        priorStartDate = subDays(now, 60);
+        priorEndDate = subDays(now, 30);
+    }
+
+    // Filter for prior period
+    const priorData = trendData.filter(item => {
+      try {
+        const itemDate = parseISO(item.date);
+        return (isAfter(itemDate, priorStartDate) || isEqual(itemDate, priorStartDate)) &&
+               (isBefore(itemDate, priorEndDate) || isEqual(itemDate, priorEndDate));
+      } catch {
+        return false;
+      }
+    });
+
+    if (priorData.length === 0) return change;
+
+    // Calculate prior period value
+    const priorTotals = priorData.reduce((acc, day) => {
+      acc.delivered += day.delivered || 0;
+      acc.uniqueOpens += day.uniqueOpens || 0;
+      acc.uniqueClicks += day.uniqueClicks || 0;
+      acc.newSubscribers += day.newSubscribers || 0;
+      return acc;
+    }, { delivered: 0, uniqueOpens: 0, uniqueClicks: 0, newSubscribers: 0 });
+
+    let priorValue;
+    switch (metricType) {
+      case 'newSubscribers':
+        priorValue = priorTotals.newSubscribers;
+        break;
+      case 'openRate':
+        priorValue = priorTotals.delivered > 0 ? (priorTotals.uniqueOpens / priorTotals.delivered) * 100 : 0;
+        break;
+      case 'ctr':
+        priorValue = priorTotals.delivered > 0 ? (priorTotals.uniqueClicks / priorTotals.delivered) * 100 : 0;
+        break;
+      case 'ctor':
+        priorValue = priorTotals.uniqueOpens > 0 ? (priorTotals.uniqueClicks / priorTotals.uniqueOpens) * 100 : 0;
+        break;
+      default:
+        return change;
+    }
+
+    return calculatedValue - priorValue;
+  }, [metricType, trendData, filteredTrendData, chartTimePeriod, calculatedValue, change]);
+
+  // Use calculated values for display
+  const displayValue = calculatedValue;
+  const displayChange = calculatedChange;
+
+  const isPositive = displayChange > 0;
+  const isNegative = displayChange < 0;
+  const changeValue = Math.abs(displayChange || 0);
   const changeText = formatType === 'percent'
     ? `${changeValue.toFixed(1)} pts`
     : formatValue(changeValue);
 
   const changeClass = isPositive ? 'positive' : isNegative ? 'negative' : 'neutral';
-
-  // Filter data based on selected time period
-  const filteredTrendData = useMemo(() => {
-    return filterDataByTimePeriod(trendData, chartTimePeriod, customDateRange);
-  }, [trendData, chartTimePeriod, customDateRange]);
 
   // Prepare chart data with trading-style OHLC simulation
   const chartData = useMemo(() => {
@@ -361,7 +482,7 @@ export default function MetricCardWithGraph({
 
         <div className="metric-value-section">
           <div className="metric-values-row">
-            <div className="metric-value tabular-nums">{formatValue(value)}</div>
+            <div className="metric-value tabular-nums">{formatValue(displayValue)}</div>
             {comparisonValue !== undefined && comparisonValue !== null && (
               <div className="metric-comparison-value">
                 <span className="comparison-value tabular-nums">{formatValue(comparisonValue)}</span>
@@ -375,7 +496,7 @@ export default function MetricCardWithGraph({
               {isNegative && '↓'}
               {' '}{changeText}
             </span>
-            <span className="metric-label">{changeLabel}</span>
+            <span className="metric-label">{metricType ? `vs prior ${chartTimePeriod === '7day' ? '7D' : chartTimePeriod === '30day' ? '30D' : chartTimePeriod === '90day' ? '90D' : chartTimePeriod}` : changeLabel}</span>
           </div>
         </div>
 

@@ -363,6 +363,7 @@ export function calculateTrendData(posts) {
       bounceRate: day.recipients > 0 ? ((day.recipients - day.delivered) / day.recipients) * 100 : 0,
       delivered: day.delivered,
       recipients: day.recipients,
+      uniqueOpens: day.uniqueOpens,
       uniqueClicks: day.uniqueClicks,
       clicks: day.clicks,
       trafficSent: day.trafficSent
@@ -514,4 +515,139 @@ export function calculateDailyNewSubscribers(subscribers, dateRange = null) {
   });
 
   return dailyNewSubs;
+}
+
+/**
+ * Calculate subscriber counts by source for a given date range
+ * Returns an array of { source, count, percentage } objects
+ */
+export function calculateSourceWiseSubscribers(subscribers, dateRange = null) {
+  if (!subscribers || subscribers.length === 0) return [];
+
+  const sourceMap = {};
+  let totalFiltered = 0;
+
+  subscribers.forEach(sub => {
+    // Filter by date range if provided
+    if (dateRange) {
+      const subscribeDate = sub['Subscribe Date'] || sub['created'];
+      if (!subscribeDate) return;
+
+      try {
+        const date = subscribeDate instanceof Date ? subscribeDate : parseISO(subscribeDate);
+        if (isNaN(date.getTime())) return;
+        if (!isWithinInterval(date, { start: startOfDay(dateRange.start), end: endOfDay(dateRange.end) })) {
+          return;
+        }
+      } catch {
+        return;
+      }
+    }
+
+    const source = normalizeSourceName(sub['UTM Source'] || sub['utmSource'] || 'direct');
+    sourceMap[source] = (sourceMap[source] || 0) + 1;
+    totalFiltered++;
+  });
+
+  // Convert to sorted array
+  const result = Object.entries(sourceMap)
+    .map(([source, count]) => ({
+      source: source.charAt(0).toUpperCase() + source.slice(1),
+      count,
+      percentage: totalFiltered > 0 ? (count / totalFiltered) * 100 : 0
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  return result;
+}
+
+/**
+ * Calculate day-wise and newsletter-wise unsubscribe and bounce rates
+ */
+export function calculateUnsubscribeBounceData(posts, dateRange = null) {
+  const dailyData = [];
+  const newsletterData = [];
+
+  // Filter posts by date range
+  let filteredPosts = posts;
+  if (dateRange) {
+    filteredPosts = filterByDateRange(posts, dateRange);
+  }
+
+  // Daily aggregation
+  const dailyMap = {};
+  filteredPosts.forEach(post => {
+    const date = post['Publish Date'] || post['publishDate'];
+    if (!date) return;
+
+    let dateKey;
+    try {
+      const parsedDate = date instanceof Date ? date : parseISO(date);
+      if (isNaN(parsedDate.getTime())) return;
+      dateKey = format(parsedDate, 'yyyy-MM-dd');
+    } catch {
+      return;
+    }
+
+    if (!dailyMap[dateKey]) {
+      dailyMap[dateKey] = { date: dateKey, delivered: 0, unsubscribes: 0, recipients: 0 };
+    }
+
+    dailyMap[dateKey].delivered += post['Delivered'] || post['delivered'] || 0;
+    dailyMap[dateKey].unsubscribes += post['Unsubscribes'] || post['unsubscribes'] || 0;
+    dailyMap[dateKey].recipients += post['Recipients'] || post['recipients'] || 0;
+  });
+
+  // Convert daily map to array with rates and counts
+  Object.values(dailyMap)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .forEach(day => {
+      const bounces = Math.max(0, day.recipients - day.delivered);
+      dailyData.push({
+        date: day.date,
+        unsubscribeRate: day.delivered > 0 ? (day.unsubscribes / day.delivered) * 100 : 0,
+        bounceRate: day.recipients > 0 ? (bounces / day.recipients) * 100 : 0,
+        unsubscribes: day.unsubscribes,
+        bounces: bounces,
+        delivered: day.delivered,
+        recipients: day.recipients
+      });
+    });
+
+  // Newsletter-wise data
+  filteredPosts.forEach(post => {
+    const delivered = post['Delivered'] || post['delivered'] || 0;
+    const recipients = post['Recipients'] || post['recipients'] || 0;
+    const unsubscribes = post['Unsubscribes'] || post['unsubscribes'] || 0;
+    const bounces = Math.max(0, recipients - delivered);
+    const uniqueOpens = post['Unique Opens'] || post['uniqueOpens'] || 0;
+    const uniqueClicks = post['Unique Clicks'] || post['uniqueClicks'] || 0;
+    const openRate = delivered > 0 ? (uniqueOpens / delivered) * 100 : 0;
+    const ctr = delivered > 0 ? (uniqueClicks / delivered) * 100 : 0;
+    const ctor = uniqueOpens > 0 ? (uniqueClicks / uniqueOpens) * 100 : 0;
+
+    newsletterData.push({
+      title: (post['Title'] || post['title'] || 'Untitled').substring(0, 50),
+      date: post['Publish Date'] || post['publishDate'],
+      publicationName: post['Publication Name'] || post['publicationName'] || '',
+      unsubscribeRate: delivered > 0 ? (unsubscribes / delivered) * 100 : 0,
+      bounceRate: recipients > 0 ? (bounces / recipients) * 100 : 0,
+      unsubscribes,
+      bounces,
+      delivered,
+      recipients,
+      openRate,
+      ctr,
+      ctor
+    });
+  });
+
+  // Sort newsletter data by date descending
+  newsletterData.sort((a, b) => {
+    const dateA = new Date(a.date || 0);
+    const dateB = new Date(b.date || 0);
+    return dateB - dateA;
+  });
+
+  return { dailyData, newsletterData };
 }

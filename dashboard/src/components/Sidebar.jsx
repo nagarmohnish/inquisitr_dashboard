@@ -1,4 +1,4 @@
-export default function Sidebar({ activePage, onPageChange }) {
+export default function Sidebar({ activePage, onPageChange, isOpen, onClose }) {
   const navItems = [
     {
       id: 'overview',
@@ -47,6 +47,15 @@ export default function Sidebar({ activePage, onPageChange }) {
       )
     },
     {
+      id: 'chat',
+      label: 'Analytics Chat',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      )
+    },
+    {
       id: 'diagnostics',
       label: 'Diagnostics',
       icon: (
@@ -68,34 +77,61 @@ export default function Sidebar({ activePage, onPageChange }) {
     }
   ];
 
+  const handleNavClick = (pageId) => {
+    onPageChange(pageId);
+    // Close sidebar on mobile after navigation
+    if (onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <img
-          src="https://www.inquisitr.com/wp-content/uploads/2025/02/inquisitr-logo-Transparent.png"
-          alt="Inquisitr"
-          className="sidebar-logo-img"
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={onClose}
+          aria-hidden="true"
         />
-      </div>
+      )}
 
-      <nav className="sidebar-nav">
-        {navItems.map(item => (
-          <button
-            key={item.id}
-            className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-            onClick={() => onPageChange(item.id)}
-          >
-            {item.icon}
-            {item.label}
-          </button>
-        ))}
-      </nav>
+      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+        {/* Mobile close button */}
+        <button className="sidebar-close-btn" onClick={onClose} aria-label="Close menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
 
-      <div className="sidebar-footer">
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-          Newsletter Analytics
+        <div className="sidebar-header">
+          <img
+            src="https://www.inquisitr.com/wp-content/uploads/2025/02/inquisitr-logo-Transparent.png"
+            alt="Inquisitr"
+            className="sidebar-logo-img"
+          />
         </div>
-      </div>
-    </aside>
+
+        <nav className="sidebar-nav">
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              className={`nav-item ${activePage === item.id ? 'active' : ''}`}
+              onClick={() => handleNavClick(item.id)}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+            Newsletter Analytics
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

@@ -12,7 +12,9 @@ import {
   getTopArticles,
   getTopPosts,
   calculateSubscriberGrowthBySource,
-  calculateDailyNewSubscribers
+  calculateDailyNewSubscribers,
+  calculateSourceWiseSubscribers,
+  calculateUnsubscribeBounceData
 } from './utils/dataParser';
 import MetricCard from './components/MetricCard';
 import MetricCardWithGraph from './components/MetricCardWithGraph';
@@ -33,6 +35,7 @@ import UnitEconomicsPage from './pages/UnitEconomicsPage';
 import ContentPerformancePage from './pages/ContentPerformancePage';
 import HelpGuidePage from './pages/HelpGuidePage';
 import DiagnosticsPage from './pages/DiagnosticsPage';
+import AnalyticsChatPage from './pages/AnalyticsChatPage';
 
 const AUTO_REFRESH_INTERVAL = 6 * 60 * 60 * 1000;
 const STATUS_CHECK_INTERVAL = 60 * 1000;
@@ -66,6 +69,17 @@ function ExportIcon() {
   );
 }
 
+// Hamburger menu icon for mobile
+function MenuIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  );
+}
+
 function App() {
   const [rawData, setRawData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +94,8 @@ function App() {
   const [expandedMetric, setExpandedMetric] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [activePage, setActivePage] = useState('overview');
+  const [newsletterTableFilter, setNewsletterTableFilter] = useState('all');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const sourceOptions = useMemo(() => {
     const options = [{ value: 'overall', label: 'All Publications' }];
@@ -250,6 +266,12 @@ function App() {
       // Calculate subscriber growth by UTM source
       const subscriberGrowthBySource = calculateSubscriberGrowthBySource(subscribers, dateRange);
 
+      // Calculate source-wise subscriber table data (filtered by date range)
+      const sourceWiseSubscribers = calculateSourceWiseSubscribers(subscribers, dateRange);
+
+      // Calculate unsubscribe and bounce rate data
+      const unsubscribeBounceData = calculateUnsubscribeBounceData(posts, dateRange);
+
       // Generate sparkline data from trend data
       const sparklineData = {
         subscribers: trendData.map(d => d.recipients || 0),
@@ -278,6 +300,8 @@ function App() {
         postCount: filteredPosts.length,
         sparklineData,
         subscriberGrowthBySource,
+        sourceWiseSubscribers,
+        unsubscribeBounceData,
         previousDayValues,
         comparisonLabel,
         comparisonAverages,
@@ -364,7 +388,12 @@ function App() {
 
   return (
     <div className="app-layout">
-      <Sidebar activePage={activePage} onPageChange={setActivePage} />
+      <Sidebar
+        activePage={activePage}
+        onPageChange={setActivePage}
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
 
       <div className="main-content">
         <div className="dashboard-container">
@@ -372,8 +401,17 @@ function App() {
           <header className="dashboard-header">
             <div className="header-content">
               <div className="header-left">
+                {/* Mobile hamburger menu */}
+                <button
+                  className="mobile-menu-btn"
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  aria-label="Open menu"
+                >
+                  <MenuIcon />
+                </button>
                 <h1 className="header-title">
                   {activePage === 'overview' ? 'Overview' :
+                   activePage === 'chat' ? 'Analytics Chat' :
                    activePage === 'target' ? 'Target Tracking' :
                    activePage === 'content' ? 'Content Performance' :
                    activePage === 'diagnostics' ? 'Diagnostics' :
@@ -421,6 +459,8 @@ function App() {
             <DiagnosticsPage data={rawData} onRefresh={() => loadData(true)} />
           ) : activePage === 'help' ? (
             <HelpGuidePage />
+          ) : activePage === 'chat' ? (
+            <AnalyticsChatPage data={rawData} />
           ) : (
             <main className="dashboard-main">
         {isLoading ? (
@@ -565,14 +605,15 @@ function App() {
               <h2 className="section-title">Engagement Metrics</h2>
               <div className="metrics-grid-4">
                 <MetricCardWithGraph
-                  label="Subscribers"
-                  value={processedData.metrics.totalSubs.value}
-                  change={processedData.metrics.totalSubs.change}
+                  label="New Subscribers"
+                  value={processedData.metrics.newSubscribers.value}
+                  change={processedData.metrics.newSubscribers.change}
                   changeLabel={processedData.comparisonLabel || 'vs prior'}
                   format="exact"
                   color="blue"
                   trendData={processedData.trendData}
                   dataKey="newSubscribers"
+                  metricType="newSubscribers"
                   showPreviousDay={timePeriod === 'yesterday'}
                   previousDayValue={processedData.previousDayValues?.newSubscribers}
                   comparisonValue={processedData.showComparison ? processedData.comparisonAverages?.subscribers : undefined}
@@ -587,6 +628,7 @@ function App() {
                   color="purple"
                   trendData={processedData.trendData}
                   dataKey="openRate"
+                  metricType="openRate"
                   showPreviousDay={timePeriod === 'yesterday'}
                   previousDayValue={processedData.previousDayValues?.openRate}
                   comparisonValue={processedData.showComparison ? processedData.comparisonAverages?.openRate : undefined}
@@ -601,6 +643,7 @@ function App() {
                   color="green"
                   trendData={processedData.trendData}
                   dataKey="ctr"
+                  metricType="ctr"
                   showPreviousDay={timePeriod === 'yesterday'}
                   previousDayValue={processedData.previousDayValues?.ctr}
                   comparisonValue={processedData.showComparison ? processedData.comparisonAverages?.ctr : undefined}
@@ -615,6 +658,7 @@ function App() {
                   color="pink"
                   trendData={processedData.trendData}
                   dataKey="ctor"
+                  metricType="ctor"
                   showPreviousDay={timePeriod === 'yesterday'}
                   previousDayValue={processedData.previousDayValues?.ctor}
                   comparisonValue={processedData.showComparison ? processedData.comparisonAverages?.ctor : undefined}
@@ -623,20 +667,10 @@ function App() {
               </div>
             </section>
 
-            {/* Newsletter Health Metrics */}
+            {/* Newsletter Health Metrics - removed List Growth */}
             <section>
               <h2 className="section-title">Newsletter Health</h2>
-              <div className="metrics-grid-4">
-                <MetricCard
-                  label="List Growth"
-                  value={processedData.metrics.subsGrowthRate.value}
-                  change={processedData.metrics.subsGrowthRate.change}
-                  changeLabel={processedData.comparisonLabel || 'vs prior'}
-                  format="percent"
-                  color="green"
-                  tooltip="Rate at which your subscriber list is growing"
-                  invertChange={false}
-                />
+              <div className="metrics-grid-3">
                 <MetricCard
                   label="Traffic Sent"
                   value={processedData.metrics.trafficSent.value}
@@ -678,10 +712,49 @@ function App() {
                 <SubscriberChart
                   data={processedData.subscriberGrowthBySource.data}
                   sources={processedData.subscriberGrowthBySource.sources}
-                  title="Cumulative Subscriber Growth"
-                  subtitle="Growth trajectory by acquisition channel (UTM source)"
+                  title="Daily New Subscribers"
+                  subtitle="New subscribers by acquisition channel (UTM source)"
                   height={320}
                 />
+              </section>
+            )}
+
+            {/* Source-wise Subscriber Table */}
+            {processedData.sourceWiseSubscribers?.length > 0 && (
+              <section>
+                <h2 className="section-title">Subscribers by Source</h2>
+                <div className="card" style={{ padding: 'var(--space-md)' }}>
+                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
+                    New subscribers acquired during the selected time period, grouped by acquisition source.
+                  </p>
+                  <div className="table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid var(--border-light)' }}>
+                          <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)' }}>Source</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)' }}>Count</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)' }}>%</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {processedData.sourceWiseSubscribers.map((row, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                            <td style={{ padding: '10px 12px', fontSize: '13px' }}>{row.source}</td>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '13px', fontWeight: '500' }}>{row.count.toLocaleString()}</td>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '13px', color: 'var(--text-secondary)' }}>{row.percentage.toFixed(1)}%</td>
+                          </tr>
+                        ))}
+                        <tr style={{ background: 'var(--bg-tertiary)', fontWeight: '600' }}>
+                          <td style={{ padding: '10px 12px', fontSize: '13px' }}>Total</td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '13px' }}>
+                            {processedData.sourceWiseSubscribers.reduce((sum, r) => sum + r.count, 0).toLocaleString()}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '13px' }}>100%</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </section>
             )}
 
@@ -700,6 +773,111 @@ function App() {
                 enableBrush={false}
               />
             </section>
+
+            {/* Unsubscribe & Bounce Count Trends */}
+            {processedData.unsubscribeBounceData?.dailyData?.length > 0 && (
+              <section>
+                <h2 className="section-title">Unsubscribe & Bounce Counts</h2>
+                <div className="tables-grid">
+                  {/* Daily Trend Chart - Counts */}
+                  <TrendChartAdvanced
+                    data={processedData.unsubscribeBounceData.dailyData}
+                    dataKey="unsubscribes"
+                    title="Unsubscribe Count"
+                    color="amber"
+                    format="number"
+                    showStats={true}
+                    enableBrush={false}
+                  />
+                  <TrendChartAdvanced
+                    data={processedData.unsubscribeBounceData.dailyData}
+                    dataKey="bounces"
+                    title="Bounce Count"
+                    color="pink"
+                    format="number"
+                    showStats={true}
+                    enableBrush={false}
+                  />
+                </div>
+              </section>
+            )}
+
+            {/* Newsletter-wise Metrics Table */}
+            {processedData.unsubscribeBounceData?.newsletterData?.length > 0 && (
+              <section>
+                <h2 className="section-title">Newsletter Metrics</h2>
+                <div className="card" style={{ padding: 'var(--space-md)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
+                      Performance metrics for each newsletter in the selected period.
+                    </p>
+                    <select
+                      value={newsletterTableFilter}
+                      onChange={(e) => setNewsletterTableFilter(e.target.value)}
+                      style={{
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-light)',
+                        background: 'var(--bg-primary)',
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="all">All Publications</option>
+                      {rawData?.publications?.map(pub => (
+                        <option key={pub.id || pub.name} value={pub.name}>{pub.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid var(--border-light)', position: 'sticky', top: 0, background: 'var(--bg-secondary)' }}>
+                          <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)' }}>Newsletter</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)' }}>Date</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)' }}>Delivered</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)' }}>Open Rate</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)' }}>CTR</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)' }}>CTOR</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)' }}>Unsub Rate</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)' }}>Bounce Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {processedData.unsubscribeBounceData.newsletterData
+                          .filter(row => newsletterTableFilter === 'all' || row.publicationName?.toLowerCase() === newsletterTableFilter.toLowerCase())
+                          .slice(0, 25)
+                          .map((row, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                            <td style={{ padding: '10px 12px', fontSize: '12px' }} title={row.title}>{row.title}</td>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px', color: 'var(--text-muted)' }}>
+                              {row.date ? format(new Date(row.date), 'MMM d') : '-'}
+                            </td>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px' }}>{row.delivered.toLocaleString()}</td>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px', color: row.openRate >= 35 ? 'var(--status-good)' : row.openRate >= 25 ? 'var(--text-primary)' : 'var(--status-risk)' }}>
+                              {row.openRate.toFixed(1)}%
+                            </td>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px' }}>
+                              {row.ctr.toFixed(2)}%
+                            </td>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px' }}>
+                              {row.ctor.toFixed(1)}%
+                            </td>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px', color: row.unsubscribeRate > 0.5 ? 'var(--status-risk)' : 'var(--text-primary)' }}>
+                              {row.unsubscribeRate.toFixed(2)}%
+                            </td>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px', color: row.bounceRate > 2 ? 'var(--status-risk)' : 'var(--text-primary)' }}>
+                              {row.bounceRate.toFixed(2)}%
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* Tables Grid */}
             <section>

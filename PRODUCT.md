@@ -17,18 +17,37 @@ A real-time analytics dashboard for monitoring Inquisitr's newsletter performanc
 ## Features
 
 ### 1. Overview Page
-- **Engagement Metrics:** Subscribers, Open Rate, CTR, CTOR with sparkline graphs
+- **Engagement Metrics:** New Subscribers (period-filtered), Open Rate, CTR, CTOR with sparkline graphs
+- **Newsletter Health Metrics:** Bounce Rate, Unsubscribe Rate, Spam Rate
+- **Source-wise Subscriber Table:** Shows subscriber counts by acquisition source with date filtering
+- **Unsubscribe/Bounce Rate Trends:** Day-wise and newsletter-wise charts and tables
 - **Trend Charts:** Daily/weekly performance visualization
 - **Top Articles Table:** Best performing articles by clicks with external links
 - **Top Newsletters Table:** Best performing newsletters by open rate
 - **Subscriber Growth Chart:** Growth by acquisition source (daily counts)
 - **Filters:** Time period (Yesterday, 7/30/90 days, All Time, Custom), Publication source, Comparison periods
 
-### 2. Target Page
+### 2. Analytics Chat Page
+- **Natural Language Queries:** Ask questions about newsletter data in plain English
+- **Supported Query Types:**
+  - "Top 5 articles by clicks this week"
+  - "Compare this week vs last week"
+  - "Subscriber growth by source"
+  - "How did newsletters perform?"
+  - "Show me the open rate trend"
+- **Response Format:**
+  - Direct answer (2-3 sentences)
+  - Data table (max 10 rows, sortable)
+  - Visualization (bar, line, or pie chart)
+  - Insights (3-5 bullets with actionable recommendation)
+- **Conversation Context:** Maintains context for follow-up questions
+- **Quick Suggestions:** One-click query shortcuts
+
+### 3. Target Page
 - Goal tracking and target monitoring
 - Progress visualization toward subscriber/engagement goals
 
-### 3. Unit Economics Page
+### 4. Unit Economics Page
 - **Cost Tracking:** Beehiiv costs ($99/month), paid acquisition costs
 - **Revenue Estimation:** Based on article clicks and estimated RPM ($2.70)
 - **Funnel Visualization:** Delivered → Opened → Clicked → Article Clicks → Revenue
@@ -36,19 +55,24 @@ A real-time analytics dashboard for monitoring Inquisitr's newsletter performanc
 - **Period Selector:** Day/Week/Month/Custom with comparison toggle
 - **Cost Breakdown Chart:** Donut chart showing cost distribution
 
-### 4. Content Performance Page
+### 5. Content Performance Page
+- **Summary Metrics:** Entities Detected, Events/Trends, Average Open Rate, Average CTOR
+- **Entity & Event Performance (Primary):**
+  - Top personalities/entities mentioned in content
+  - Top events/trends covered
+  - Click to expand and see top performing articles for each entity/event
+  - Enhanced entity recognition with 150+ personalities database
+- **Entity/Event Trend Charts:** Visual trends over time
+- **Format Analysis:** Subject line and title format effectiveness
 - **Newsletter Analysis:** Sortable table with all newsletters and metrics
 - **Top Performing Articles:** Sortable table with click counts and external links
-- **Entity Performance:** Analysis by people/topics mentioned
-- **Event Performance:** Analysis by events covered
-- **Format Analysis:** Subject line and title format effectiveness
 
-### 5. Diagnostics Page
+### 6. Diagnostics Page
 - API connection status
 - Cache status and age
 - Manual data refresh capability
 
-### 6. Help/Guide Page
+### 7. Help/Guide Page
 - Documentation and usage instructions
 
 ## Technical Architecture
@@ -121,6 +145,7 @@ dashboard/
 │   │   ├── DateRangePicker.jsx      # Custom date selection
 │   │   └── ChartFilters.jsx         # Chart filter controls
 │   ├── pages/
+│   │   ├── AnalyticsChatPage.jsx    # Natural language analytics chat
 │   │   ├── TargetPage.jsx           # Goal tracking
 │   │   ├── UnitEconomicsPage.jsx    # Cost/revenue analysis
 │   │   ├── ContentPerformancePage.jsx # Content analysis
@@ -137,7 +162,26 @@ dashboard/
 
 ## Recent Changes
 
+### February 3, 2026
+- **Overview Page Enhancements:**
+  - Added source-wise subscriber table with date filtering
+  - Engagement metrics now update based on selected time period (7D shows only 7 days data)
+  - Changed "Subscribers" to "New Subscribers" showing period-filtered counts
+  - Added day-wise and newsletter-wise unsubscribe/bounce rate trends and tables
+  - Removed "List Growth" metric from Newsletter Health section
+
+- **Content Performance Page Improvements:**
+  - Reordered sections: Entity & Event Performance now primary (first)
+  - Expandable entity/event rows showing top 5 performing articles when clicked
+  - Enhanced entity recognition with comprehensive database of 150+ personalities
+  - Categories include: Politics, Tech, Music, Entertainment, Sports, Royalty, Media, Business
+  - Full name and alias matching (e.g., "Elon Musk", "elon", "musk" all map to "Elon Musk")
+
 ### January 29, 2026
+- **Added Analytics Chat page** - Natural language interface for querying newsletter data
+  - Supports queries like "Top 5 articles", "Compare weeks", "Subscriber sources"
+  - Returns formatted answers with tables, charts, and actionable insights
+  - Quick suggestion buttons for common queries
 - Deployed to Render (https://inquisitr-dashboard.onrender.com)
 - Removed Railway configuration, added Render config
 - Moved vite build tools to dependencies for Render compatibility

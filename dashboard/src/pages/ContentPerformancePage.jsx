@@ -16,34 +16,179 @@ const TIME_OPTIONS = [
 
 // ============== ENTITY EXTRACTION LOGIC ==============
 
-// Known personalities/celebrities database (expandable)
-const KNOWN_PERSONALITIES = [
-  // Politics - US
-  'trump', 'biden', 'obama', 'kamala', 'harris', 'desantis', 'pence', 'pelosi',
-  'mcconnell', 'aoc', 'ocasio-cortez', 'bernie', 'sanders', 'warren', 'cruz', 'rubio',
-  'newsom', 'abbott', 'musk', 'vivek', 'ramaswamy', 'haley', 'nikki',
+// Enhanced personality database with full names and aliases
+const PERSONALITY_DATABASE = [
+  // Politics - US (with full names and variations)
+  { names: ['donald trump', 'trump', 'president trump'], display: 'Donald Trump', category: 'Politics' },
+  { names: ['joe biden', 'biden', 'president biden'], display: 'Joe Biden', category: 'Politics' },
+  { names: ['barack obama', 'obama'], display: 'Barack Obama', category: 'Politics' },
+  { names: ['kamala harris', 'kamala', 'harris', 'vp harris'], display: 'Kamala Harris', category: 'Politics' },
+  { names: ['ron desantis', 'desantis', 'governor desantis'], display: 'Ron DeSantis', category: 'Politics' },
+  { names: ['mike pence', 'pence'], display: 'Mike Pence', category: 'Politics' },
+  { names: ['nancy pelosi', 'pelosi'], display: 'Nancy Pelosi', category: 'Politics' },
+  { names: ['mitch mcconnell', 'mcconnell'], display: 'Mitch McConnell', category: 'Politics' },
+  { names: ['alexandria ocasio-cortez', 'ocasio-cortez', 'aoc'], display: 'AOC', category: 'Politics' },
+  { names: ['bernie sanders', 'bernie', 'sanders'], display: 'Bernie Sanders', category: 'Politics' },
+  { names: ['elizabeth warren', 'warren'], display: 'Elizabeth Warren', category: 'Politics' },
+  { names: ['ted cruz', 'cruz'], display: 'Ted Cruz', category: 'Politics' },
+  { names: ['marco rubio', 'rubio'], display: 'Marco Rubio', category: 'Politics' },
+  { names: ['gavin newsom', 'newsom'], display: 'Gavin Newsom', category: 'Politics' },
+  { names: ['greg abbott', 'abbott'], display: 'Greg Abbott', category: 'Politics' },
+  { names: ['vivek ramaswamy', 'vivek', 'ramaswamy'], display: 'Vivek Ramaswamy', category: 'Politics' },
+  { names: ['nikki haley', 'haley'], display: 'Nikki Haley', category: 'Politics' },
+  { names: ['jd vance', 'vance'], display: 'JD Vance', category: 'Politics' },
+  { names: ['marjorie taylor greene', 'mtg', 'greene'], display: 'Marjorie Taylor Greene', category: 'Politics' },
+  { names: ['matt gaetz', 'gaetz'], display: 'Matt Gaetz', category: 'Politics' },
+  { names: ['kevin mccarthy', 'mccarthy'], display: 'Kevin McCarthy', category: 'Politics' },
+  { names: ['mike johnson', 'speaker johnson'], display: 'Mike Johnson', category: 'Politics' },
+
   // Politics - International
-  'putin', 'zelensky', 'xi', 'jinping', 'trudeau', 'netanyahu', 'modi', 'macron',
-  'kim jong', 'bolsonaro', 'lula', 'sunak', 'starmer', 'meloni',
-  // Entertainment
-  'taylor swift', 'beyonce', 'kardashian', 'kanye', 'ye', 'drake', 'rihanna',
-  'swift', 'bieber', 'selena gomez', 'doja cat', 'bad bunny', 'harry styles',
-  'zendaya', 'timothee', 'chalamet', 'margot robbie', 'ryan gosling', 'leo dicaprio',
-  'tom hanks', 'meryl streep', 'jennifer lawrence', 'chris hemsworth', 'scarlett johansson',
-  'keanu reeves', 'dwayne johnson', 'the rock', 'vin diesel', 'jason momoa',
-  // Tech
-  'elon', 'zuckerberg', 'bezos', 'cook', 'gates', 'altman', 'sam altman',
-  'satya nadella', 'pichai', 'dorsey', 'jack dorsey',
+  { names: ['vladimir putin', 'putin'], display: 'Vladimir Putin', category: 'Politics' },
+  { names: ['volodymyr zelensky', 'zelensky', 'zelenskyy'], display: 'Volodymyr Zelensky', category: 'Politics' },
+  { names: ['xi jinping', 'xi', 'jinping'], display: 'Xi Jinping', category: 'Politics' },
+  { names: ['justin trudeau', 'trudeau'], display: 'Justin Trudeau', category: 'Politics' },
+  { names: ['benjamin netanyahu', 'netanyahu', 'bibi'], display: 'Benjamin Netanyahu', category: 'Politics' },
+  { names: ['narendra modi', 'modi'], display: 'Narendra Modi', category: 'Politics' },
+  { names: ['emmanuel macron', 'macron'], display: 'Emmanuel Macron', category: 'Politics' },
+  { names: ['kim jong un', 'kim jong-un', 'kim jong'], display: 'Kim Jong Un', category: 'Politics' },
+  { names: ['jair bolsonaro', 'bolsonaro'], display: 'Jair Bolsonaro', category: 'Politics' },
+  { names: ['rishi sunak', 'sunak'], display: 'Rishi Sunak', category: 'Politics' },
+  { names: ['keir starmer', 'starmer'], display: 'Keir Starmer', category: 'Politics' },
+  { names: ['giorgia meloni', 'meloni'], display: 'Giorgia Meloni', category: 'Politics' },
+
+  // Tech Billionaires
+  { names: ['elon musk', 'elon', 'musk'], display: 'Elon Musk', category: 'Tech' },
+  { names: ['mark zuckerberg', 'zuckerberg', 'zuck'], display: 'Mark Zuckerberg', category: 'Tech' },
+  { names: ['jeff bezos', 'bezos'], display: 'Jeff Bezos', category: 'Tech' },
+  { names: ['tim cook', 'cook'], display: 'Tim Cook', category: 'Tech' },
+  { names: ['bill gates', 'gates'], display: 'Bill Gates', category: 'Tech' },
+  { names: ['sam altman', 'altman'], display: 'Sam Altman', category: 'Tech' },
+  { names: ['satya nadella', 'nadella'], display: 'Satya Nadella', category: 'Tech' },
+  { names: ['sundar pichai', 'pichai'], display: 'Sundar Pichai', category: 'Tech' },
+  { names: ['jack dorsey', 'dorsey'], display: 'Jack Dorsey', category: 'Tech' },
+  { names: ['jensen huang', 'huang'], display: 'Jensen Huang', category: 'Tech' },
+
+  // Music Artists
+  { names: ['taylor swift', 'swift', 'taylor'], display: 'Taylor Swift', category: 'Music' },
+  { names: ['beyonce', 'beyoncé', 'queen bey'], display: 'Beyoncé', category: 'Music' },
+  { names: ['kanye west', 'kanye', 'ye', 'yeezy'], display: 'Kanye West', category: 'Music' },
+  { names: ['drake', 'drizzy', 'aubrey graham'], display: 'Drake', category: 'Music' },
+  { names: ['rihanna', 'riri', 'fenty'], display: 'Rihanna', category: 'Music' },
+  { names: ['justin bieber', 'bieber'], display: 'Justin Bieber', category: 'Music' },
+  { names: ['selena gomez', 'selena'], display: 'Selena Gomez', category: 'Music' },
+  { names: ['doja cat', 'doja'], display: 'Doja Cat', category: 'Music' },
+  { names: ['bad bunny', 'benito'], display: 'Bad Bunny', category: 'Music' },
+  { names: ['harry styles', 'harry'], display: 'Harry Styles', category: 'Music' },
+  { names: ['ariana grande', 'ariana'], display: 'Ariana Grande', category: 'Music' },
+  { names: ['billie eilish', 'billie'], display: 'Billie Eilish', category: 'Music' },
+  { names: ['lizzo', 'lizzo'], display: 'Lizzo', category: 'Music' },
+  { names: ['dua lipa', 'dua'], display: 'Dua Lipa', category: 'Music' },
+  { names: ['miley cyrus', 'miley'], display: 'Miley Cyrus', category: 'Music' },
+  { names: ['the weeknd', 'weeknd', 'abel tesfaye'], display: 'The Weeknd', category: 'Music' },
+  { names: ['post malone', 'posty'], display: 'Post Malone', category: 'Music' },
+  { names: ['cardi b', 'cardi'], display: 'Cardi B', category: 'Music' },
+  { names: ['nicki minaj', 'nicki'], display: 'Nicki Minaj', category: 'Music' },
+  { names: ['travis scott', 'travis'], display: 'Travis Scott', category: 'Music' },
+
+  // Actors/Actresses
+  { names: ['zendaya', 'zendaya coleman'], display: 'Zendaya', category: 'Entertainment' },
+  { names: ['timothee chalamet', 'timothée chalamet', 'chalamet', 'timothee'], display: 'Timothée Chalamet', category: 'Entertainment' },
+  { names: ['margot robbie', 'margot'], display: 'Margot Robbie', category: 'Entertainment' },
+  { names: ['ryan gosling', 'gosling'], display: 'Ryan Gosling', category: 'Entertainment' },
+  { names: ['leonardo dicaprio', 'leo dicaprio', 'dicaprio', 'leo'], display: 'Leonardo DiCaprio', category: 'Entertainment' },
+  { names: ['tom hanks', 'hanks'], display: 'Tom Hanks', category: 'Entertainment' },
+  { names: ['meryl streep', 'streep'], display: 'Meryl Streep', category: 'Entertainment' },
+  { names: ['jennifer lawrence', 'j-law'], display: 'Jennifer Lawrence', category: 'Entertainment' },
+  { names: ['chris hemsworth', 'hemsworth'], display: 'Chris Hemsworth', category: 'Entertainment' },
+  { names: ['scarlett johansson', 'scarjo', 'scarlett'], display: 'Scarlett Johansson', category: 'Entertainment' },
+  { names: ['keanu reeves', 'keanu'], display: 'Keanu Reeves', category: 'Entertainment' },
+  { names: ['dwayne johnson', 'the rock', 'rock'], display: 'Dwayne Johnson', category: 'Entertainment' },
+  { names: ['vin diesel', 'diesel'], display: 'Vin Diesel', category: 'Entertainment' },
+  { names: ['jason momoa', 'momoa'], display: 'Jason Momoa', category: 'Entertainment' },
+  { names: ['jennifer aniston', 'aniston'], display: 'Jennifer Aniston', category: 'Entertainment' },
+  { names: ['brad pitt', 'pitt'], display: 'Brad Pitt', category: 'Entertainment' },
+  { names: ['angelina jolie', 'jolie', 'angelina'], display: 'Angelina Jolie', category: 'Entertainment' },
+  { names: ['johnny depp', 'depp'], display: 'Johnny Depp', category: 'Entertainment' },
+  { names: ['amber heard', 'heard'], display: 'Amber Heard', category: 'Entertainment' },
+  { names: ['tom cruise', 'cruise'], display: 'Tom Cruise', category: 'Entertainment' },
+  { names: ['robert downey jr', 'rdj', 'downey'], display: 'Robert Downey Jr.', category: 'Entertainment' },
+  { names: ['chris evans', 'evans'], display: 'Chris Evans', category: 'Entertainment' },
+  { names: ['chris pratt', 'pratt'], display: 'Chris Pratt', category: 'Entertainment' },
+  { names: ['ryan reynolds', 'reynolds'], display: 'Ryan Reynolds', category: 'Entertainment' },
+  { names: ['blake lively', 'lively'], display: 'Blake Lively', category: 'Entertainment' },
+  { names: ['sydney sweeney', 'sweeney'], display: 'Sydney Sweeney', category: 'Entertainment' },
+  { names: ['florence pugh', 'pugh'], display: 'Florence Pugh', category: 'Entertainment' },
+  { names: ['anya taylor-joy', 'anya taylor joy', 'anya'], display: 'Anya Taylor-Joy', category: 'Entertainment' },
+  { names: ['pedro pascal', 'pascal'], display: 'Pedro Pascal', category: 'Entertainment' },
+
+  // Reality TV / Kardashians
+  { names: ['kim kardashian', 'kim k', 'kim'], display: 'Kim Kardashian', category: 'Entertainment' },
+  { names: ['kylie jenner', 'kylie'], display: 'Kylie Jenner', category: 'Entertainment' },
+  { names: ['kendall jenner', 'kendall'], display: 'Kendall Jenner', category: 'Entertainment' },
+  { names: ['khloe kardashian', 'khloe'], display: 'Khloé Kardashian', category: 'Entertainment' },
+  { names: ['kourtney kardashian', 'kourtney'], display: 'Kourtney Kardashian', category: 'Entertainment' },
+  { names: ['kris jenner', 'kris'], display: 'Kris Jenner', category: 'Entertainment' },
+  { names: ['travis barker', 'barker'], display: 'Travis Barker', category: 'Entertainment' },
+
   // Sports
-  'lebron', 'jordan', 'brady', 'mahomes', 'curry', 'messi', 'ronaldo', 'neymar',
-  'djokovic', 'nadal', 'federer', 'serena', 'williams', 'tiger woods', 'mcilroy',
+  { names: ['lebron james', 'lebron', 'king james'], display: 'LeBron James', category: 'Sports' },
+  { names: ['michael jordan', 'mj', 'jordan'], display: 'Michael Jordan', category: 'Sports' },
+  { names: ['tom brady', 'brady'], display: 'Tom Brady', category: 'Sports' },
+  { names: ['patrick mahomes', 'mahomes'], display: 'Patrick Mahomes', category: 'Sports' },
+  { names: ['stephen curry', 'steph curry', 'curry'], display: 'Stephen Curry', category: 'Sports' },
+  { names: ['lionel messi', 'messi', 'leo messi'], display: 'Lionel Messi', category: 'Sports' },
+  { names: ['cristiano ronaldo', 'ronaldo', 'cr7'], display: 'Cristiano Ronaldo', category: 'Sports' },
+  { names: ['neymar', 'neymar jr'], display: 'Neymar', category: 'Sports' },
+  { names: ['novak djokovic', 'djokovic'], display: 'Novak Djokovic', category: 'Sports' },
+  { names: ['rafael nadal', 'nadal', 'rafa'], display: 'Rafael Nadal', category: 'Sports' },
+  { names: ['roger federer', 'federer'], display: 'Roger Federer', category: 'Sports' },
+  { names: ['serena williams', 'serena'], display: 'Serena Williams', category: 'Sports' },
+  { names: ['tiger woods', 'tiger'], display: 'Tiger Woods', category: 'Sports' },
+  { names: ['rory mcilroy', 'mcilroy'], display: 'Rory McIlroy', category: 'Sports' },
+  { names: ['aaron rodgers', 'rodgers'], display: 'Aaron Rodgers', category: 'Sports' },
+  { names: ['lamar jackson', 'jackson'], display: 'Lamar Jackson', category: 'Sports' },
+  { names: ['travis kelce', 'kelce'], display: 'Travis Kelce', category: 'Sports' },
+  { names: ['shohei ohtani', 'ohtani'], display: 'Shohei Ohtani', category: 'Sports' },
+  { names: ['conor mcgregor', 'mcgregor'], display: 'Conor McGregor', category: 'Sports' },
+
   // Royalty
-  'prince harry', 'meghan', 'markle', 'kate', 'middleton', 'william', 'charles',
-  'queen elizabeth', 'king charles', 'diana',
-  // Media/Influencers
-  'joe rogan', 'tucker', 'carlson', 'hannity', 'maddow', 'oprah', 'ellen',
-  'logan paul', 'jake paul', 'mr beast', 'mrbeast', 'pewdiepie',
+  { names: ['prince harry', 'harry', 'duke of sussex'], display: 'Prince Harry', category: 'Royalty' },
+  { names: ['meghan markle', 'meghan', 'duchess of sussex', 'markle'], display: 'Meghan Markle', category: 'Royalty' },
+  { names: ['kate middleton', 'kate', 'princess kate', 'princess of wales', 'catherine'], display: 'Kate Middleton', category: 'Royalty' },
+  { names: ['prince william', 'william', 'prince of wales'], display: 'Prince William', category: 'Royalty' },
+  { names: ['king charles', 'charles iii', 'king charles iii'], display: 'King Charles', category: 'Royalty' },
+  { names: ['queen elizabeth', 'elizabeth ii', 'the queen'], display: 'Queen Elizabeth', category: 'Royalty' },
+  { names: ['princess diana', 'diana'], display: 'Princess Diana', category: 'Royalty' },
+
+  // Media/Influencers/Podcasters
+  { names: ['joe rogan', 'rogan'], display: 'Joe Rogan', category: 'Media' },
+  { names: ['tucker carlson', 'tucker', 'carlson'], display: 'Tucker Carlson', category: 'Media' },
+  { names: ['sean hannity', 'hannity'], display: 'Sean Hannity', category: 'Media' },
+  { names: ['rachel maddow', 'maddow'], display: 'Rachel Maddow', category: 'Media' },
+  { names: ['oprah winfrey', 'oprah'], display: 'Oprah Winfrey', category: 'Media' },
+  { names: ['ellen degeneres', 'ellen'], display: 'Ellen DeGeneres', category: 'Media' },
+  { names: ['logan paul', 'logan'], display: 'Logan Paul', category: 'Media' },
+  { names: ['jake paul', 'jake'], display: 'Jake Paul', category: 'Media' },
+  { names: ['mr beast', 'mrbeast', 'jimmy donaldson'], display: 'MrBeast', category: 'Media' },
+  { names: ['pewdiepie', 'pewds', 'felix kjellberg'], display: 'PewDiePie', category: 'Media' },
+  { names: ['alex jones'], display: 'Alex Jones', category: 'Media' },
+  { names: ['howard stern', 'stern'], display: 'Howard Stern', category: 'Media' },
+  { names: ['anderson cooper', 'cooper'], display: 'Anderson Cooper', category: 'Media' },
+
+  // Business/Finance
+  { names: ['warren buffett', 'buffett'], display: 'Warren Buffett', category: 'Business' },
+  { names: ['larry fink', 'fink'], display: 'Larry Fink', category: 'Business' },
+  { names: ['jamie dimon', 'dimon'], display: 'Jamie Dimon', category: 'Business' },
+  { names: ['bob iger', 'iger'], display: 'Bob Iger', category: 'Business' },
+
+  // Authors/Activists
+  { names: ['jk rowling', 'j.k. rowling', 'rowling'], display: 'J.K. Rowling', category: 'Entertainment' },
+  { names: ['stephen king', 'king'], display: 'Stephen King', category: 'Entertainment' },
+  { names: ['greta thunberg', 'greta', 'thunberg'], display: 'Greta Thunberg', category: 'Activism' },
 ];
+
+// Build a flat list for backward compatibility and faster lookup
+const KNOWN_PERSONALITIES = PERSONALITY_DATABASE.flatMap(p => p.names);
 
 // Event/trend keywords and patterns
 const EVENT_PATTERNS = [
@@ -121,25 +266,35 @@ const TITLE_FORMAT_PATTERNS = [
   { pattern: /(rumor|report|allegedly|supposedly|source)/i, format: 'Rumor/Report', example: 'Reports say...' },
 ];
 
-// Extract entities from text
+// Extract entities from text using enhanced database
 function extractEntities(text) {
   if (!text) return [];
   const textLower = text.toLowerCase();
-  const found = [];
+  const found = new Map(); // Use Map to dedupe by display name
 
-  for (const personality of KNOWN_PERSONALITIES) {
-    // Check for whole word match
-    const regex = new RegExp(`\\b${personality.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-    if (regex.test(textLower)) {
-      // Capitalize properly
-      const displayName = personality.split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      found.push({ type: 'personality', name: displayName, raw: personality });
+  for (const personality of PERSONALITY_DATABASE) {
+    // Check each name variant
+    for (const name of personality.names) {
+      // Check for whole word match (with word boundary handling)
+      const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escapedName}\\b`, 'i');
+
+      if (regex.test(textLower)) {
+        // Use the canonical display name
+        if (!found.has(personality.display)) {
+          found.set(personality.display, {
+            type: 'personality',
+            name: personality.display,
+            category: personality.category,
+            raw: name
+          });
+        }
+        break; // Found a match for this personality, move to next
+      }
     }
   }
 
-  return found;
+  return Array.from(found.values());
 }
 
 // Extract events from text
@@ -236,6 +391,9 @@ function processPostsData(posts, periodDays) {
     const subjectFormat = detectSubjectFormat(subjectLine);
     const titleFormat = detectTitleFormat(title);
 
+    // Get article clicks from the post
+    const articleClicks = p['Article Clicks'] || p['articleClicks'] || [];
+
     return {
       id: p['Post ID'] || p.id || Math.random(),
       title,
@@ -251,6 +409,7 @@ function processPostsData(posts, periodDays) {
       events: allEvents,
       subjectFormat: subjectFormat.format,
       titleFormat: titleFormat.format,
+      articleClicks: articleClicks,
     };
   });
 
@@ -368,9 +527,39 @@ function aggregateFormatPerformance(posts, formatKey, metricKey) {
 // Colors for charts
 const CHART_COLORS = ['#18181b', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
 
-// Entity Performance Table
-function EntityPerformanceTable({ entities, title }) {
+// Entity Performance Table with expandable articles
+function EntityPerformanceTable({ entities, title, posts = [], articles = [] }) {
+  const [selectedEntity, setSelectedEntity] = useState(null);
   const topEntities = entities.slice(0, 10);
+
+  // Get articles for selected entity
+  const entityArticles = useMemo(() => {
+    if (!selectedEntity) return [];
+    const entityLower = selectedEntity.toLowerCase();
+
+    // Find posts that contain this entity
+    const entityPosts = posts.filter(p =>
+      p.entities?.some(e => e.name.toLowerCase() === entityLower)
+    );
+
+    // Get articles from those posts (limited to top 5)
+    const relatedArticles = [];
+    entityPosts.forEach(post => {
+      if (post.articleClicks && Array.isArray(post.articleClicks)) {
+        post.articleClicks.forEach(article => {
+          relatedArticles.push({
+            title: article.title || article.url || 'Article',
+            url: article.url,
+            clicks: article.totalClicks || article.clicks || 0,
+            postTitle: post.title,
+            date: post.date
+          });
+        });
+      }
+    });
+
+    return relatedArticles.sort((a, b) => b.clicks - a.clicks).slice(0, 5);
+  }, [selectedEntity, posts]);
 
   if (topEntities.length === 0) {
     return (
@@ -402,19 +591,53 @@ function EntityPerformanceTable({ entities, title }) {
           </thead>
           <tbody>
             {topEntities.map((entity, idx) => (
-              <tr key={entity.name}>
-                <td className="col-rank">{idx + 1}</td>
-                <td className="col-title">
-                  <span className="entity-name">{entity.name}</span>
-                </td>
-                <td className="col-stat">{entity.postCount}</td>
-                <td className="col-stat">
-                  <span className={`stat-pill ${entity.avgOpenRate >= 35 ? 'good' : entity.avgOpenRate >= 25 ? 'ok' : 'low'}`}>
-                    {formatPercent(entity.avgOpenRate)}
-                  </span>
-                </td>
-                <td className="col-stat">{formatPercent(entity.avgCtor)}</td>
-              </tr>
+              <React.Fragment key={entity.name}>
+                <tr
+                  className={`entity-row ${selectedEntity === entity.name ? 'selected' : ''}`}
+                  onClick={() => setSelectedEntity(selectedEntity === entity.name ? null : entity.name)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <td className="col-rank">{idx + 1}</td>
+                  <td className="col-title">
+                    <span className="entity-name">
+                      {selectedEntity === entity.name ? '▼ ' : '▶ '}{entity.name}
+                    </span>
+                  </td>
+                  <td className="col-stat">{entity.postCount}</td>
+                  <td className="col-stat">
+                    <span className={`stat-pill ${entity.avgOpenRate >= 35 ? 'good' : entity.avgOpenRate >= 25 ? 'ok' : 'low'}`}>
+                      {formatPercent(entity.avgOpenRate)}
+                    </span>
+                  </td>
+                  <td className="col-stat">{formatPercent(entity.avgCtor)}</td>
+                </tr>
+                {selectedEntity === entity.name && (
+                  <tr className="entity-articles-row">
+                    <td colSpan={5}>
+                      <div className="entity-articles-panel">
+                        <div className="entity-articles-title">Top Articles for {entity.name}</div>
+                        {entityArticles.length > 0 ? (
+                          <ul className="entity-articles-list">
+                            {entityArticles.map((article, i) => (
+                              <li key={i}>
+                                <span className="article-clicks">{article.clicks.toLocaleString()} clicks</span>
+                                <span className="article-title">{article.title?.substring(0, 50) || 'Article'}</span>
+                                {article.url && (
+                                  <a href={article.url} target="_blank" rel="noopener noreferrer" className="article-link">
+                                    ↗
+                                  </a>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="no-articles">No article click data available for this entity</div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
@@ -423,9 +646,38 @@ function EntityPerformanceTable({ entities, title }) {
   );
 }
 
-// Event Performance Table
-function EventPerformanceTable({ events, title }) {
+// Event Performance Table with expandable articles
+function EventPerformanceTable({ events, title, posts = [], articles = [] }) {
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const topEvents = events.slice(0, 10);
+
+  // Get articles for selected event
+  const eventArticles = useMemo(() => {
+    if (!selectedEvent) return [];
+
+    // Find posts that contain this event
+    const eventPosts = posts.filter(p =>
+      p.events?.some(e => e.label === selectedEvent)
+    );
+
+    // Get articles from those posts
+    const relatedArticles = [];
+    eventPosts.forEach(post => {
+      if (post.articleClicks && Array.isArray(post.articleClicks)) {
+        post.articleClicks.forEach(article => {
+          relatedArticles.push({
+            title: article.title || article.url || 'Article',
+            url: article.url,
+            clicks: article.totalClicks || article.clicks || 0,
+            postTitle: post.title,
+            date: post.date
+          });
+        });
+      }
+    });
+
+    return relatedArticles.sort((a, b) => b.clicks - a.clicks).slice(0, 5);
+  }, [selectedEvent, posts]);
 
   if (topEvents.length === 0) {
     return (
@@ -458,22 +710,56 @@ function EventPerformanceTable({ events, title }) {
           </thead>
           <tbody>
             {topEvents.map((event, idx) => (
-              <tr key={event.label}>
-                <td className="col-rank">{idx + 1}</td>
-                <td className="col-title">
-                  <span className="event-label">{event.label}</span>
-                </td>
-                <td className="col-stat">
-                  <span className="category-badge">{event.category}</span>
-                </td>
-                <td className="col-stat">{event.postCount}</td>
-                <td className="col-stat">
-                  <span className={`stat-pill ${event.avgOpenRate >= 35 ? 'good' : event.avgOpenRate >= 25 ? 'ok' : 'low'}`}>
-                    {formatPercent(event.avgOpenRate)}
-                  </span>
-                </td>
-                <td className="col-stat">{formatPercent(event.avgCtor)}</td>
-              </tr>
+              <React.Fragment key={event.label}>
+                <tr
+                  className={`event-row ${selectedEvent === event.label ? 'selected' : ''}`}
+                  onClick={() => setSelectedEvent(selectedEvent === event.label ? null : event.label)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <td className="col-rank">{idx + 1}</td>
+                  <td className="col-title">
+                    <span className="event-label">
+                      {selectedEvent === event.label ? '▼ ' : '▶ '}{event.label}
+                    </span>
+                  </td>
+                  <td className="col-stat">
+                    <span className="category-badge">{event.category}</span>
+                  </td>
+                  <td className="col-stat">{event.postCount}</td>
+                  <td className="col-stat">
+                    <span className={`stat-pill ${event.avgOpenRate >= 35 ? 'good' : event.avgOpenRate >= 25 ? 'ok' : 'low'}`}>
+                      {formatPercent(event.avgOpenRate)}
+                    </span>
+                  </td>
+                  <td className="col-stat">{formatPercent(event.avgCtor)}</td>
+                </tr>
+                {selectedEvent === event.label && (
+                  <tr className="event-articles-row">
+                    <td colSpan={6}>
+                      <div className="entity-articles-panel">
+                        <div className="entity-articles-title">Top Articles for {event.label}</div>
+                        {eventArticles.length > 0 ? (
+                          <ul className="entity-articles-list">
+                            {eventArticles.map((article, i) => (
+                              <li key={i}>
+                                <span className="article-clicks">{article.clicks.toLocaleString()} clicks</span>
+                                <span className="article-title">{article.title?.substring(0, 50) || 'Article'}</span>
+                                {article.url && (
+                                  <a href={article.url} target="_blank" rel="noopener noreferrer" className="article-link">
+                                    ↗
+                                  </a>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="no-articles">No article click data available for this event</div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
@@ -1008,20 +1294,20 @@ export default function ContentPerformancePage({ data }) {
     const periodDays = getPeriodDays(timePeriod);
     const processedPosts = processPostsData(data.posts, periodDays);
 
-    // Process articles data
+    // Process articles data from articleClicks (normalized from topArticles)
     const now = new Date();
     const cutoffDate = subDays(now, periodDays);
-    const processedArticles = (data.articles || [])
+    const processedArticles = (data.articleClicks || [])
       .filter(a => {
         if (periodDays === 9999) return true;
         const articleDate = new Date(a['Publish Date'] || a.publishDate);
         return articleDate >= cutoffDate;
       })
       .map(a => ({
-        title: a['Title'] || a.title || 'Untitled',
+        title: a['Post Title'] || a['Article URL'] || 'Article',
         publishDate: a['Publish Date'] || a.publishDate,
         totalClicks: a['Total Clicks'] || a.totalClicks || 0,
-        url: a['URL'] || a.url || null
+        url: a['Article URL'] || a.url || null
       }))
       .sort((a, b) => (b.totalClicks || 0) - (a.totalClicks || 0));
 
@@ -1093,22 +1379,10 @@ export default function ContentPerformancePage({ data }) {
         </div>
       </div>
 
-      {/* Summary Metrics */}
+      {/* Summary Metrics - Entities/Events first, then Open Rate/CTR */}
       <section>
         <h2 className="section-title">Content Analysis Overview</h2>
         <div className="content-metrics-grid">
-          <MetricSummaryCard
-            label="Average Open Rate"
-            value={summary.avgOpenRate}
-            format="percent"
-            subtext="Subject line performance"
-          />
-          <MetricSummaryCard
-            label="Average CTOR"
-            value={summary.avgCtor}
-            format="percent"
-            subtext="Title & content engagement"
-          />
           <MetricSummaryCard
             label="Entities Detected"
             value={summary.entitiesFound}
@@ -1121,25 +1395,51 @@ export default function ContentPerformancePage({ data }) {
             format="number"
             subtext="Topics identified"
           />
+          <MetricSummaryCard
+            label="Average Open Rate"
+            value={summary.avgOpenRate}
+            format="percent"
+            subtext="Subject line performance"
+          />
+          <MetricSummaryCard
+            label="Average CTOR"
+            value={summary.avgCtor}
+            format="percent"
+            subtext="Title & content engagement"
+          />
         </div>
       </section>
 
-      {/* Entity & Event Performance */}
+      {/* Entity & Event Performance - PRIMARY SECTION */}
       <section>
         <h2 className="section-title">Entity & Event Performance</h2>
         <p className="section-description">
-          Personalities and events mentioned in your content. Open rates reflect subject line appeal, CTOR measures content engagement.
+          Personalities and events mentioned in your content. Click on an entity to see its top performing articles. Open rates reflect subject line appeal, CTOR measures content engagement.
         </p>
         <div className="content-tables-row">
           <EntityPerformanceTable
             entities={entityPerformance}
             title="Top Personalities/Entities"
+            posts={posts}
+            articles={articles}
           />
           <EventPerformanceTable
             events={eventPerformance}
             title="Top Events/Trends"
+            posts={posts}
+            articles={articles}
           />
         </div>
+      </section>
+
+      {/* Entity/Event Trend Chart */}
+      <section>
+        <h2 className="section-title">Entity/Event Trends</h2>
+        <EntityEventTrendChart
+          posts={posts}
+          entities={entityPerformance}
+          events={eventPerformance}
+        />
       </section>
 
       {/* Format Analysis */}
@@ -1162,16 +1462,6 @@ export default function ContentPerformancePage({ data }) {
             color="#10b981"
           />
         </div>
-      </section>
-
-      {/* Entity/Event Trend Chart */}
-      <section>
-        <h2 className="section-title">Entity/Event Trends</h2>
-        <EntityEventTrendChart
-          posts={posts}
-          entities={entityPerformance}
-          events={eventPerformance}
-        />
       </section>
 
       {/* Sortable Posts Table */}
