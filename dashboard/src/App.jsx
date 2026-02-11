@@ -37,7 +37,7 @@ import HelpGuidePage from './pages/HelpGuidePage';
 import DiagnosticsPage from './pages/DiagnosticsPage';
 import AnalyticsChatPage from './pages/AnalyticsChatPage';
 
-const AUTO_REFRESH_INTERVAL = 6 * 60 * 60 * 1000;
+const AUTO_REFRESH_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours - matches server refresh interval
 const STATUS_CHECK_INTERVAL = 60 * 1000;
 
 // Icons

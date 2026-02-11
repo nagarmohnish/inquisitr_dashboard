@@ -23,7 +23,7 @@ const CONFIG = {
   RATE_LIMIT_DELAY_MS: 200,
   MAX_PER_PAGE: 100,
   CACHE_FILE: path.join(__dirname, 'data-cache.json'),
-  REFRESH_INTERVAL_MS: 6 * 60 * 60 * 1000 // 6 hours
+  REFRESH_INTERVAL_MS: parseInt(process.env.REFRESH_INTERVAL_HOURS || '2', 10) * 60 * 60 * 1000 // Default 2 hours, configurable
 };
 
 const HEADERS = {
@@ -446,7 +446,7 @@ function isCacheStale(data) {
 }
 
 // ===================== ROUTES =====================
-app.get('/api/data', async (req, res) => {
+app.get('/api/data', async (_req, res) => {
   try {
     let data = loadCache();
     if (!data || isCacheStale(data)) {
@@ -458,7 +458,7 @@ app.get('/api/data', async (req, res) => {
   }
 });
 
-app.post('/api/refresh', async (req, res) => {
+app.post('/api/refresh', async (_req, res) => {
   try {
     const data = await fetchAllData();
     res.json(data);
@@ -467,33 +467,47 @@ app.post('/api/refresh', async (req, res) => {
   }
 });
 
-app.get('/api/status', (req, res) => {
+app.get('/api/status', (_req, res) => {
   const data = loadCache();
+  const fetchedAt = data?.fetchedAt || null;
+  const ageMinutes = fetchedAt ? Math.round((Date.now() - new Date(fetchedAt).getTime()) / 60000) : null;
   res.json({
     hasCachedData: !!data,
-    fetchedAt: data?.fetchedAt || null,
+    fetchedAt,
+    ageMinutes,
     isStale: data ? isCacheStale(data) : true,
-    nextRefresh: data?.fetchedAt
-      ? new Date(new Date(data.fetchedAt).getTime() + CONFIG.REFRESH_INTERVAL_MS).toISOString()
+    refreshIntervalHours: Math.round(CONFIG.REFRESH_INTERVAL_MS / 3600000),
+    nextRefresh: fetchedAt
+      ? new Date(new Date(fetchedAt).getTime() + CONFIG.REFRESH_INTERVAL_MS).toISOString()
       : null
   });
 });
 
 // ===================== AUTO REFRESH =====================
+let refreshTimer = null;
+
 function scheduleRefresh() {
+  if (refreshTimer) clearTimeout(refreshTimer);
+
   const data = loadCache();
   let nextIn = CONFIG.REFRESH_INTERVAL_MS;
 
   if (data?.fetchedAt) {
     const elapsed = Date.now() - new Date(data.fetchedAt).getTime();
-    nextIn = Math.max(0, CONFIG.REFRESH_INTERVAL_MS - elapsed);
+    nextIn = Math.max(60000, CONFIG.REFRESH_INTERVAL_MS - elapsed); // Min 1 minute
   }
 
-  console.log(`Next auto-refresh in ${Math.round(nextIn / 60000)} minutes`);
+  const refreshHours = Math.round(CONFIG.REFRESH_INTERVAL_MS / 3600000);
+  console.log(`Auto-refresh interval: ${refreshHours}h | Next refresh in ${Math.round(nextIn / 60000)} minutes`);
 
-  setTimeout(async () => {
-    console.log('Auto-refresh triggered');
-    try { await fetchAllData(); } catch (e) { console.error('Auto-refresh failed:', e); }
+  refreshTimer = setTimeout(async () => {
+    console.log('Auto-refresh triggered at', new Date().toISOString());
+    try {
+      await fetchAllData();
+      console.log('Auto-refresh completed successfully');
+    } catch (e) {
+      console.error('Auto-refresh failed:', e.message);
+    }
     scheduleRefresh();
   }, nextIn);
 }
@@ -515,6 +529,7 @@ if (isProduction) {
 
 // ===================== START =====================
 app.listen(port, async () => {
+  const refreshHours = Math.round(CONFIG.REFRESH_INTERVAL_MS / 3600000);
   console.log(`\n${'═'.repeat(50)}`);
   console.log('  Inquisitr Analytics API Server');
   console.log(`  http://localhost:${port}`);
@@ -524,12 +539,19 @@ app.listen(port, async () => {
   console.log('  GET  /api/data    - Cached data');
   console.log('  POST /api/refresh - Force refresh');
   console.log('  GET  /api/status  - Cache status');
-  console.log('\nAuto-refresh: Every 6 hours\n');
+  console.log(`\nAuto-refresh: Every ${refreshHours} hour(s)\n`);
 
   const cached = loadCache();
-  if (!cached) {
-    console.log('No cache found, fetching initial data...');
-    await fetchAllData();
+  if (!cached || isCacheStale(cached)) {
+    const reason = !cached ? 'No cache found' : `Cache stale (fetched ${cached.fetchedAt})`;
+    console.log(`${reason}, fetching fresh data...`);
+    try {
+      await fetchAllData();
+    } catch (e) {
+      console.error('Initial fetch failed:', e.message);
+    }
+  } else {
+    console.log(`Cache is fresh (fetched ${cached.fetchedAt})`);
   }
   scheduleRefresh();
 });
