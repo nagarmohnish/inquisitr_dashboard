@@ -58,7 +58,7 @@ function categorizeUrl(url) {
 }
 
 // ===================== API HELPERS =====================
-async function makeApiRequest(endpoint, params = {}) {
+async function makeApiRequest(endpoint, params = {}, retryCount = 0) {
   await delay(CONFIG.RATE_LIMIT_DELAY_MS);
 
   const url = new URL(`${CONFIG.API_BASE_URL}${endpoint}`);
@@ -75,9 +75,13 @@ async function makeApiRequest(endpoint, params = {}) {
   const response = await fetch(url.toString(), { headers: HEADERS });
 
   if (response.status === 429) {
-    console.log('Rate limited, waiting 60s...');
-    await delay(60000);
-    return makeApiRequest(endpoint, params);
+    if (retryCount >= 3) {
+      throw new Error(`Rate limited after ${retryCount} retries on ${endpoint}`);
+    }
+    const waitTime = 30000 * (retryCount + 1); // 30s, 60s, 90s
+    console.log(`  Rate limited on ${endpoint}, retry ${retryCount + 1}/3, waiting ${waitTime / 1000}s...`);
+    await delay(waitTime);
+    return makeApiRequest(endpoint, params, retryCount + 1);
   }
 
   if (!response.ok) {
@@ -364,7 +368,7 @@ async function fetchAllData() {
     const allSegments = [];
     const publicationsInfo = [];
 
-    // Fetch data for each publication
+    // Fetch data for each publication SEQUENTIALLY to avoid rate limiting
     for (const pub of publications) {
       const pubId = pub.id;
       const pubName = pub.name || 'Unknown';
@@ -372,14 +376,16 @@ async function fetchAllData() {
 
       publicationsInfo.push(processPublicationData(pub));
 
-      // Fetch posts and subscribers for this publication
+      // Fetch posts first, then subscribers SEQUENTIALLY (not parallel)
+      // to avoid doubling API request rate and hitting rate limits
       try {
-        const [rawPosts, rawSubscribers] = await Promise.all([
-          getPosts(pubId),
-          getSubscribers(pubId)
-        ]);
+        console.log(`    Fetching posts for ${pubName}...`);
+        const rawPosts = await getPosts(pubId);
+        console.log(`    Posts fetched: ${rawPosts.length}`);
 
-        console.log(`    Posts: ${rawPosts.length}, Subscribers: ${rawSubscribers.length}`);
+        console.log(`    Fetching subscribers for ${pubName}...`);
+        const rawSubscribers = await getSubscribers(pubId);
+        console.log(`    Subscribers fetched: ${rawSubscribers.length}`);
 
         // Process and add to combined arrays
         const posts = rawPosts.map(p => processPostData(p, pubName));
@@ -387,6 +393,7 @@ async function fetchAllData() {
 
         allPosts.push(...posts);
         allSubscribers.push(...subscribers);
+        console.log(`    ${pubName} complete: ${posts.length} posts, ${subscribers.length} subscribers`);
 
         // Fetch segments (optional)
         try {
@@ -397,11 +404,19 @@ async function fetchAllData() {
           console.log(`    Segments fetch failed for ${pubName}, continuing...`);
         }
       } catch (e) {
-        console.error(`    Error fetching data for ${pubName}:`, e.message);
+        console.error(`    ERROR fetching ${pubName}: ${e.message}`);
+        console.error(`    Stack: ${e.stack?.split('\n')[1]?.trim()}`);
       }
     }
 
     console.log(`\n  Total: ${allPosts.length} posts, ${allSubscribers.length} subscribers`);
+
+    // Safety check: don't save if we got no posts at all
+    if (allPosts.length === 0) {
+      console.error('  WARNING: No posts fetched. Keeping old cache if available.');
+      const oldCache = loadCache();
+      if (oldCache) return oldCache;
+    }
 
     // Calculate combined overview
     const overview = calculateOverviewMetrics(allPosts, allSubscribers);
@@ -425,6 +440,12 @@ async function fetchAllData() {
     return data;
   } catch (error) {
     console.error('Fetch error:', error);
+    // Return old cache if available instead of throwing
+    const oldCache = loadCache();
+    if (oldCache) {
+      console.log('Returning stale cache due to fetch failure');
+      return oldCache;
+    }
     throw error;
   }
 }

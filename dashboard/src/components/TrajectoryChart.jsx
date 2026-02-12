@@ -73,11 +73,23 @@ function formatNumber(num) {
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload || payload.length === 0) return null;
 
+  let formattedLabel = label;
+  try {
+    if (typeof label === 'string' && label.includes('-')) {
+      formattedLabel = format(parseISO(label), 'MMM d, yyyy');
+    }
+  } catch {
+    // keep original
+  }
+
+  // Extract daily growth from the data point
+  const dailyGrowth = payload[0]?.payload?.dailyGrowth;
+
   return (
     <div className="chart-tooltip">
-      <div className="tooltip-header">{label}</div>
+      <div className="tooltip-header">{formattedLabel}</div>
       <div className="tooltip-content">
-        {payload.map((entry, idx) => (
+        {payload.filter(entry => entry.value != null).map((entry, idx) => (
           <div key={idx} className="tooltip-row">
             <span
               className="tooltip-dot"
@@ -93,6 +105,13 @@ function CustomTooltip({ active, payload, label }) {
             <span className="tooltip-value">{formatNumber(entry.value)}</span>
           </div>
         ))}
+        {dailyGrowth != null && (
+          <div className="tooltip-row">
+            <span className="tooltip-dot" style={{ backgroundColor: '#10b981' }} />
+            <span className="tooltip-label">New today:</span>
+            <span className="tooltip-value">+{dailyGrowth}</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -208,6 +227,17 @@ export default function TrajectoryChart({
               axisLine={false}
               tickLine={false}
               tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tickFormatter={(dateStr) => {
+                try {
+                  if (typeof dateStr === 'string' && dateStr.includes('-')) {
+                    return format(parseISO(dateStr), 'MMM d');
+                  }
+                  return dateStr;
+                } catch {
+                  return dateStr;
+                }
+              }}
+              interval={Math.max(Math.floor(chartData.length / 7) - 1, 0)}
             />
 
             <YAxis

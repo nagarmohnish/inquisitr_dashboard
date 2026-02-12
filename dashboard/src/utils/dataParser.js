@@ -293,7 +293,7 @@ export function calculateMetrics(posts, subscribers, priorPosts, priorSubscriber
 
   return {
     totalSubs: { value: activeSubscribers, change: newSubscribersInPeriod },
-    newSubscribers: { value: newSubscribersInPeriod, change: newSubscribersInPeriod - newSubscribersInPriorPeriod },
+    newSubscribers: { value: activeSubscribers, change: newSubscribersInPeriod - newSubscribersInPriorPeriod },
     subsGrowthRate: { value: subsGrowthRate, change: subsGrowthRate - priorSubsGrowthRate },
     openRate: { value: openRate, change: openRateChange },
     ctr: { value: ctr, change: ctrChange },

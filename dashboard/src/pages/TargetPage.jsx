@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { format, differenceInDays, parseISO, subDays } from 'date-fns';
+import { format, differenceInDays, parseISO, subDays, addDays } from 'date-fns';
 import DistanceGauge from '../components/DistanceGauge';
 import TrajectoryChart from '../components/TrajectoryChart';
 import GapAnalysisTable from '../components/GapAnalysisTable';
@@ -383,32 +383,59 @@ export default function TargetPage({ data }) {
       recommendations.push('All metrics are on track! Maintain current strategies and continue monitoring.');
     }
 
-    // Generate trajectory data for chart
+    // Generate trajectory data for chart - daily breakdown
     const trajectoryData = [];
-    const monthsUntilDeadline = Math.ceil(daysRemaining / 30);
+    const historyDays = 90;
 
-    // Add historical data points (past 3 months approximated)
-    for (let i = -3; i <= 0; i++) {
-      const monthDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      const historicalValue = currentSubs - (actualDailyGrowth * Math.abs(i) * 30);
+    // Count new subscribers per day from creation dates
+    const dailyNewSubs = {};
+    filteredSubscribers.forEach(s => {
+      const created = s['Subscribe Date'] || s.created;
+      if (!created) return;
+      try {
+        const date = created instanceof Date ? created : parseISO(created);
+        const dayKey = format(date, 'yyyy-MM-dd');
+        dailyNewSubs[dayKey] = (dailyNewSubs[dayKey] || 0) + 1;
+      } catch {
+        // skip invalid dates
+      }
+    });
+
+    // Sum new subs in the historical range to compute starting count
+    let totalNewInRange = 0;
+    for (let d = historyDays; d >= 0; d--) {
+      const dayKey = format(subDays(now, d), 'yyyy-MM-dd');
+      totalNewInRange += dailyNewSubs[dayKey] || 0;
+    }
+
+    // Starting count at the beginning of the range
+    let runningCount = currentSubs - totalNewInRange;
+
+    // Build daily historical data points
+    for (let d = historyDays; d >= 0; d--) {
+      const dayDate = subDays(now, d);
+      const dayKey = format(dayDate, 'yyyy-MM-dd');
+      const dailyNew = dailyNewSubs[dayKey] || 0;
+      runningCount += dailyNew;
       trajectoryData.push({
-        date: format(monthDate, 'MMM yy'),
-        historical: Math.max(0, historicalValue),
-        required: null,
-        projected: null
+        date: dayKey,
+        historical: Math.max(0, runningCount),
+        dailyGrowth: dailyNew,
+        required: d === 0 ? currentSubs : null,
+        projected: d === 0 ? currentSubs : null
       });
     }
 
-    // Add future projections
-    for (let i = 1; i <= monthsUntilDeadline; i++) {
-      const monthDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      const projectedValue = currentSubs + (actualDailyGrowth * i * 30);
-      const requiredValue = currentSubs + (requiredDailyGrowth * i * 30);
+    // Add daily future projections until deadline
+    for (let d = 1; d <= daysRemaining; d++) {
+      const dayDate = addDays(now, d);
+      const dayKey = format(dayDate, 'yyyy-MM-dd');
       trajectoryData.push({
-        date: format(monthDate, 'MMM yy'),
+        date: dayKey,
         historical: null,
-        required: requiredValue,
-        projected: projectedValue
+        dailyGrowth: null,
+        required: currentSubs + (requiredDailyGrowth * d),
+        projected: currentSubs + (actualDailyGrowth * d)
       });
     }
 

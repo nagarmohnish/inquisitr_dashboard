@@ -1,67 +1,10 @@
 import { useState, useMemo } from 'react';
 import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
-  ComposedChart, Line, Bar
+  ComposedChart, Line
 } from 'recharts';
-import { format, parseISO, subDays, startOfMonth, startOfYear, isAfter, isBefore, isEqual } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import ChartFilters from './ChartFilters';
-
-// Helper function to filter data by time period
-function filterDataByTimePeriod(data, timePeriod, customDateRange) {
-  if (!data || data.length === 0) return data;
-
-  let startDate, endDate = new Date();
-
-  switch (timePeriod) {
-    case '7day':
-      startDate = subDays(new Date(), 7);
-      break;
-    case '30day':
-      startDate = subDays(new Date(), 30);
-      break;
-    case '90day':
-      startDate = subDays(new Date(), 90);
-      break;
-    case 'mtd':
-      startDate = startOfMonth(new Date());
-      break;
-    case 'ytd':
-      startDate = startOfYear(new Date());
-      break;
-    case 'custom':
-      if (customDateRange) {
-        startDate = customDateRange.start;
-        endDate = customDateRange.end;
-      } else {
-        startDate = subDays(new Date(), 30);
-      }
-      break;
-    default:
-      startDate = subDays(new Date(), 30);
-  }
-
-  return data.filter(item => {
-    try {
-      const itemDate = parseISO(item.date);
-      return (isAfter(itemDate, startDate) || isEqual(itemDate, startDate)) &&
-             (isBefore(itemDate, endDate) || isEqual(itemDate, endDate));
-    } catch {
-      return true;
-    }
-  });
-}
-
-// Helper function to generate comparison data
-function generateComparisonData(data, comparisonMode) {
-  if (comparisonMode === 'none' || !data || data.length === 0) return null;
-
-  // For previous period, we'd shift the data back
-  // For now, simulate by slightly reducing values (real implementation would fetch actual historical data)
-  return data.map(item => ({
-    ...item,
-    comparisonValue: item.value * (0.85 + Math.random() * 0.2) // Simulated comparison
-  }));
-}
 
 // SOPHISTICATED B&W PALETTE: Monochrome charts with subtle variations
 const COLOR_HEX = {
@@ -130,6 +73,12 @@ const METRIC_INFO = {
     description: 'Percentage of recipients who unsubscribed after receiving the email.',
     benchmark: '<0.5% (ideal: <0.2%)',
     tip: 'Send relevant content, respect frequency preferences, and segment your audience.'
+  },
+  'Active Subscribers': {
+    formula: 'COUNT(subscribers WHERE status = "active")',
+    description: 'Total currently active subscribers. Matches Beehiiv\'s "Active subscribers" count. Change shows net new subscribers vs prior period.',
+    benchmark: 'Continuously growing',
+    tip: 'Focus on acquisition channels, referral programs, and lead magnets.'
   }
 };
 
@@ -139,6 +88,27 @@ function InfoIcon() {
       <circle cx="12" cy="12" r="10" />
       <line x1="12" y1="16" x2="12" y2="12" />
       <line x1="12" y1="8" x2="12.01" y2="8" />
+    </svg>
+  );
+}
+
+function ChevronIcon({ expanded }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{
+        transition: 'transform 0.2s ease',
+        transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
+      }}
+    >
+      <polyline points="6 9 12 15 18 9" />
     </svg>
   );
 }
@@ -180,8 +150,6 @@ function ChartTooltip({ active, payload, label, formatType, showComparison }) {
 
   const currentValue = payload.find(p => p.dataKey === 'value')?.value;
   const comparisonValue = payload.find(p => p.dataKey === 'comparisonValue')?.value;
-  const highValue = payload.find(p => p.dataKey === 'high')?.value;
-  const lowValue = payload.find(p => p.dataKey === 'low')?.value;
 
   let formattedDate;
   try {
@@ -202,18 +170,6 @@ function ChartTooltip({ active, payload, label, formatType, showComparison }) {
         <span className="tooltip-label">Value:</span>
         <span className="tooltip-value">{formatVal(currentValue)}</span>
       </div>
-      {highValue !== undefined && lowValue !== undefined && (
-        <>
-          <div className="tooltip-row">
-            <span className="tooltip-label">High:</span>
-            <span className="tooltip-value positive-value">{formatVal(highValue)}</span>
-          </div>
-          <div className="tooltip-row">
-            <span className="tooltip-label">Low:</span>
-            <span className="tooltip-value negative-value">{formatVal(lowValue)}</span>
-          </div>
-        </>
-      )}
       {showComparison && comparisonValue !== undefined && (
         <div className="tooltip-row comparison-row">
           <span className="tooltip-label">Prior:</span>
@@ -238,10 +194,10 @@ export default function MetricCardWithGraph({
   dataKey,
   previousDayValue,
   showPreviousDay = false,
-  showFilters = true,
   comparisonValue,
   comparisonValueLabel,
-  metricType = null // 'newSubscribers', 'openRate', 'ctr', 'ctor' - enables recalculation based on time period
+  expanded = false,
+  onToggleExpand
 }) {
   const [showInfo, setShowInfo] = useState(false);
   const [chartTimePeriod, setChartTimePeriod] = useState('30day');
@@ -254,7 +210,7 @@ export default function MetricCardWithGraph({
   const formatValue = (val) => {
     if (val === undefined || val === null || isNaN(val)) return '-';
     if (formatType === 'percent') return `${val.toFixed(1)}%`;
-    if (formatType === 'exact') return val.toLocaleString(); // Always show exact number
+    if (formatType === 'exact') return val.toLocaleString();
     if (formatType === 'number') {
       if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
       if (val >= 1000) return `${(val / 1000).toFixed(1)}K`;
@@ -263,189 +219,41 @@ export default function MetricCardWithGraph({
     return val;
   };
 
-  // Filter data based on selected time period
-  const filteredTrendData = useMemo(() => {
-    return filterDataByTimePeriod(trendData, chartTimePeriod, customDateRange);
-  }, [trendData, chartTimePeriod, customDateRange]);
-
-  // Calculate dynamic metric value based on filtered data and metric type
-  const calculatedValue = useMemo(() => {
-    if (!metricType || !filteredTrendData || filteredTrendData.length === 0) {
-      return value; // Return original value if no metricType or no data
-    }
-
-    // Sum up the relevant fields from filtered trend data
-    const totals = filteredTrendData.reduce((acc, day) => {
-      acc.delivered += day.delivered || 0;
-      acc.uniqueOpens += day.uniqueOpens || 0;
-      acc.uniqueClicks += day.uniqueClicks || 0;
-      acc.newSubscribers += day.newSubscribers || 0;
-      return acc;
-    }, { delivered: 0, uniqueOpens: 0, uniqueClicks: 0, newSubscribers: 0 });
-
-    switch (metricType) {
-      case 'newSubscribers':
-        return totals.newSubscribers;
-      case 'openRate':
-        return totals.delivered > 0 ? (totals.uniqueOpens / totals.delivered) * 100 : 0;
-      case 'ctr':
-        return totals.delivered > 0 ? (totals.uniqueClicks / totals.delivered) * 100 : 0;
-      case 'ctor':
-        return totals.uniqueOpens > 0 ? (totals.uniqueClicks / totals.uniqueOpens) * 100 : 0;
-      default:
-        return value;
-    }
-  }, [metricType, filteredTrendData, value]);
-
-  // Calculate change for dynamic value (compare to prior period of same length)
-  const calculatedChange = useMemo(() => {
-    if (!metricType || !trendData || trendData.length === 0) {
-      return change; // Return original change if no metricType
-    }
-
-    // Get the prior period data
-    const periodLength = filteredTrendData.length;
-    if (periodLength === 0) return 0;
-
-    // Find the start date of current period and calculate prior period
-    let priorStartDate, priorEndDate;
-    const now = new Date();
-
-    switch (chartTimePeriod) {
-      case '7day':
-        priorStartDate = subDays(now, 14);
-        priorEndDate = subDays(now, 7);
-        break;
-      case '30day':
-        priorStartDate = subDays(now, 60);
-        priorEndDate = subDays(now, 30);
-        break;
-      case '90day':
-        priorStartDate = subDays(now, 180);
-        priorEndDate = subDays(now, 90);
-        break;
-      case 'mtd':
-        const monthStart = startOfMonth(now);
-        const daysIntoMonth = now.getDate();
-        priorStartDate = subDays(monthStart, daysIntoMonth);
-        priorEndDate = subDays(monthStart, 1);
-        break;
-      case 'ytd':
-        const yearStart = startOfYear(now);
-        const lastYearStart = startOfYear(subDays(yearStart, 1));
-        priorStartDate = lastYearStart;
-        priorEndDate = subDays(yearStart, 1);
-        break;
-      default:
-        priorStartDate = subDays(now, 60);
-        priorEndDate = subDays(now, 30);
-    }
-
-    // Filter for prior period
-    const priorData = trendData.filter(item => {
-      try {
-        const itemDate = parseISO(item.date);
-        return (isAfter(itemDate, priorStartDate) || isEqual(itemDate, priorStartDate)) &&
-               (isBefore(itemDate, priorEndDate) || isEqual(itemDate, priorEndDate));
-      } catch {
-        return false;
-      }
-    });
-
-    if (priorData.length === 0) return change;
-
-    // Calculate prior period value
-    const priorTotals = priorData.reduce((acc, day) => {
-      acc.delivered += day.delivered || 0;
-      acc.uniqueOpens += day.uniqueOpens || 0;
-      acc.uniqueClicks += day.uniqueClicks || 0;
-      acc.newSubscribers += day.newSubscribers || 0;
-      return acc;
-    }, { delivered: 0, uniqueOpens: 0, uniqueClicks: 0, newSubscribers: 0 });
-
-    let priorValue;
-    switch (metricType) {
-      case 'newSubscribers':
-        priorValue = priorTotals.newSubscribers;
-        break;
-      case 'openRate':
-        priorValue = priorTotals.delivered > 0 ? (priorTotals.uniqueOpens / priorTotals.delivered) * 100 : 0;
-        break;
-      case 'ctr':
-        priorValue = priorTotals.delivered > 0 ? (priorTotals.uniqueClicks / priorTotals.delivered) * 100 : 0;
-        break;
-      case 'ctor':
-        priorValue = priorTotals.uniqueOpens > 0 ? (priorTotals.uniqueClicks / priorTotals.uniqueOpens) * 100 : 0;
-        break;
-      default:
-        return change;
-    }
-
-    return calculatedValue - priorValue;
-  }, [metricType, trendData, filteredTrendData, chartTimePeriod, calculatedValue, change]);
-
-  // Use calculated values for display
-  const displayValue = calculatedValue;
-  const displayChange = calculatedChange;
-
-  const isPositive = displayChange > 0;
-  const isNegative = displayChange < 0;
-  const changeValue = Math.abs(displayChange || 0);
+  const isPositive = change > 0;
+  const isNegative = change < 0;
+  const changeValue = Math.abs(change || 0);
   const changeText = formatType === 'percent'
     ? `${changeValue.toFixed(1)} pts`
     : formatValue(changeValue);
 
   const changeClass = isPositive ? 'positive' : isNegative ? 'negative' : 'neutral';
 
-  // Prepare chart data with trading-style OHLC simulation
+  // Prepare chart data only when expanded
   const chartData = useMemo(() => {
-    if (!filteredTrendData || filteredTrendData.length === 0) return [];
-    return filteredTrendData.map((item, idx, arr) => {
+    if (!expanded || !trendData || trendData.length === 0) return [];
+    return trendData.map((item, idx, arr) => {
       const currentVal = item[dataKey] || 0;
-      // Simulate high/low values for trading-style chart (in real app, use actual data)
-      const variance = currentVal * 0.05; // 5% variance
-      const high = currentVal + variance * Math.random();
-      const low = currentVal - variance * Math.random();
       const prevVal = idx > 0 ? (arr[idx - 1][dataKey] || currentVal) : currentVal;
-
       return {
         date: item.date,
         value: currentVal,
-        high: Math.max(currentVal, high),
-        low: Math.min(currentVal, low),
         open: prevVal,
         close: currentVal,
         isUp: currentVal >= prevVal
       };
     });
-  }, [filteredTrendData, dataKey]);
-
-  // Generate comparison data when comparison mode is active
-  const comparisonData = useMemo(() => {
-    if (comparisonMode === 'none') return null;
-    return chartData.map(item => ({
-      ...item,
-      comparisonValue: item.value * (0.85 + Math.random() * 0.15) // Simulated - replace with real data
-    }));
-  }, [chartData, comparisonMode]);
-
-  const displayData = comparisonMode !== 'none' && comparisonData ? comparisonData : chartData;
+  }, [expanded, trendData, dataKey]);
 
   // Calculate domain for Y axis
   const yDomain = useMemo(() => {
-    if (displayData.length === 0) return [0, 100];
-    const values = [
-      ...displayData.map(d => d.value),
-      ...displayData.map(d => d.high),
-      ...displayData.map(d => d.low),
-      ...(comparisonMode !== 'none' ? displayData.map(d => d.comparisonValue).filter(Boolean) : [])
-    ].filter(v => v !== undefined && !isNaN(v));
+    if (chartData.length === 0) return [0, 100];
+    const values = chartData.map(d => d.value).filter(v => !isNaN(v));
     if (values.length === 0) return [0, 100];
     const min = Math.min(...values);
     const max = Math.max(...values);
     const padding = (max - min) * 0.15 || 5;
     return [Math.max(0, min - padding), max + padding];
-  }, [displayData, comparisonMode]);
+  }, [chartData]);
 
   const formatXAxis = (dateStr) => {
     try {
@@ -460,20 +268,36 @@ export default function MetricCardWithGraph({
     setShowInfo(!showInfo);
   };
 
+  const handleCardClick = () => {
+    if (onToggleExpand) {
+      onToggleExpand();
+    }
+  };
+
   return (
-    <div className={`metric-card-graph accent-${color}`} style={{ '--accent': accentColor }}>
-      <div className="metric-card-top">
+    <div
+      className={`metric-card-graph accent-${color} ${expanded ? 'expanded' : ''}`}
+      style={{ '--accent': accentColor }}
+    >
+      <div className="metric-card-top" onClick={handleCardClick} style={{ cursor: onToggleExpand ? 'pointer' : 'default' }}>
         <div className="metric-card-header">
           <span className="metric-title">{label}</span>
-          {metricInfo && (
-            <button
-              className={`metric-info-btn ${showInfo ? 'active' : ''}`}
-              onClick={handleInfoClick}
-              title={`Learn about ${label}`}
-            >
-              <InfoIcon />
-            </button>
-          )}
+          <div className="metric-header-actions">
+            {metricInfo && (
+              <button
+                className={`metric-info-btn ${showInfo ? 'active' : ''}`}
+                onClick={handleInfoClick}
+                title={`Learn about ${label}`}
+              >
+                <InfoIcon />
+              </button>
+            )}
+            {onToggleExpand && (
+              <span className="metric-expand-indicator">
+                <ChevronIcon expanded={expanded} />
+              </span>
+            )}
+          </div>
         </div>
 
         {showInfo && metricInfo && (
@@ -482,7 +306,7 @@ export default function MetricCardWithGraph({
 
         <div className="metric-value-section">
           <div className="metric-values-row">
-            <div className="metric-value tabular-nums">{formatValue(displayValue)}</div>
+            <div className="metric-value tabular-nums">{formatValue(value)}</div>
             {comparisonValue !== undefined && comparisonValue !== null && (
               <div className="metric-comparison-value">
                 <span className="comparison-value tabular-nums">{formatValue(comparisonValue)}</span>
@@ -496,7 +320,7 @@ export default function MetricCardWithGraph({
               {isNegative && '↓'}
               {' '}{changeText}
             </span>
-            <span className="metric-label">{metricType ? `vs prior ${chartTimePeriod === '7day' ? '7D' : chartTimePeriod === '30day' ? '30D' : chartTimePeriod === '90day' ? '90D' : chartTimePeriod}` : changeLabel}</span>
+            <span className="metric-label">{changeLabel}</span>
           </div>
         </div>
 
@@ -508,28 +332,27 @@ export default function MetricCardWithGraph({
         )}
       </div>
 
-      {displayData.length > 1 && (
-        <>
-          {showFilters && (
-            <div className="metric-chart-filters">
-              <ChartFilters
-                title={label}
-                metricInfo={metricInfo}
-                timePeriod={chartTimePeriod}
-                onTimePeriodChange={setChartTimePeriod}
-                comparisonMode={comparisonMode}
-                onComparisonChange={setComparisonMode}
-                showComparison={true}
-                showInfo={true}
-                compact={true}
-                customDateRange={customDateRange}
-                onCustomDateChange={setCustomDateRange}
-              />
-            </div>
-          )}
+      {/* Expandable chart - only visible when card is clicked */}
+      {expanded && chartData.length > 1 && (
+        <div className="metric-expanded-chart">
+          <div className="metric-chart-filters">
+            <ChartFilters
+              title={label}
+              metricInfo={metricInfo}
+              timePeriod={chartTimePeriod}
+              onTimePeriodChange={setChartTimePeriod}
+              comparisonMode={comparisonMode}
+              onComparisonChange={setComparisonMode}
+              showComparison={true}
+              showInfo={false}
+              compact={true}
+              customDateRange={customDateRange}
+              onCustomDateChange={setCustomDateRange}
+            />
+          </div>
           <div className="metric-graph-container trading-chart">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+              <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
                 <defs>
                   <linearGradient id={`gradient-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={hexColor} stopOpacity={0.15} />
@@ -543,7 +366,7 @@ export default function MetricCardWithGraph({
                   tick={{ fontSize: 9, fill: '#a1a1aa' }}
                   axisLine={false}
                   tickLine={false}
-                  interval={Math.max(Math.floor(displayData.length / 4) - 1, 0)}
+                  interval={Math.max(Math.floor(chartData.length / 5) - 1, 0)}
                 />
                 <YAxis
                   domain={yDomain}
@@ -561,25 +384,6 @@ export default function MetricCardWithGraph({
                 />
                 <Tooltip content={<ChartTooltip formatType={formatType} showComparison={comparisonMode !== 'none'} />} />
 
-                {/* High/Low range area - trading style */}
-                <Area
-                  type="linear"
-                  dataKey="high"
-                  stroke="none"
-                  fill={hexColor}
-                  fillOpacity={0.08}
-                  connectNulls
-                />
-                <Area
-                  type="linear"
-                  dataKey="low"
-                  stroke="none"
-                  fill="#ffffff"
-                  fillOpacity={1}
-                  connectNulls
-                />
-
-                {/* Main value line - angular/trading style */}
                 <Area
                   type="linear"
                   dataKey="value"
@@ -590,7 +394,6 @@ export default function MetricCardWithGraph({
                   activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff', fill: hexColor }}
                 />
 
-                {/* Comparison line when enabled */}
                 {comparisonMode !== 'none' && (
                   <Line
                     type="linear"
@@ -605,21 +408,7 @@ export default function MetricCardWithGraph({
               </ComposedChart>
             </ResponsiveContainer>
           </div>
-
-          {/* Comparison legend */}
-          {comparisonMode !== 'none' && (
-            <div className="chart-comparison-legend">
-              <div className="legend-item">
-                <span className="legend-line" style={{ backgroundColor: hexColor }} />
-                <span>Current</span>
-              </div>
-              <div className="legend-item">
-                <span className="legend-line dashed" style={{ backgroundColor: '#94a3b8' }} />
-                <span>{comparisonMode === 'previousPeriod' ? 'Previous Period' : 'Last Year'}</span>
-              </div>
-            </div>
-          )}
-        </>
+        </div>
       )}
     </div>
   );

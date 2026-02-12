@@ -439,14 +439,31 @@ h1, h2, h3, h4, h5, h6,
 
 .metric-card-graph .metric-card-top {
   padding: var(--space-lg);
-  padding-bottom: var(--space-sm);
 }
 
 .metric-card-graph .metric-card-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-sm);
   margin-bottom: var(--space-xs);
+}
+
+.metric-card-graph .metric-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.metric-card-graph .metric-expand-indicator {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.metric-card-graph:hover .metric-expand-indicator {
+  color: var(--text-secondary);
 }
 
 .metric-card-graph .metric-title {
@@ -455,6 +472,28 @@ h1, h2, h3, h4, h5, h6,
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-muted);
+}
+
+/* Expanded metric card */
+.metric-card-graph.expanded {
+  grid-column: 1 / -1;
+}
+
+.metric-card-graph .metric-expanded-chart {
+  border-top: 1px solid var(--border-light);
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+  animation: expandChart 0.2s ease;
+}
+
+@keyframes expandChart {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 400px;
+  }
 }
 
 .metric-card-graph .metric-value-section {
@@ -711,13 +750,6 @@ h1, h2, h3, h4, h5, h6,
 /* Make metric card header relative for popover positioning */
 .metric-card-graph .metric-card-top {
   position: relative;
-}
-
-.metric-card-graph .metric-card-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
 }
 
 /* Ensure metric-graph-tooltip value styling doesn't get overridden */

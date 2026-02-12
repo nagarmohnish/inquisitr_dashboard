@@ -185,47 +185,249 @@ const PERSONALITY_DATABASE = [
   { names: ['jk rowling', 'j.k. rowling', 'rowling'], display: 'J.K. Rowling', category: 'Entertainment' },
   { names: ['stephen king', 'king'], display: 'Stephen King', category: 'Entertainment' },
   { names: ['greta thunberg', 'greta', 'thunberg'], display: 'Greta Thunberg', category: 'Activism' },
+
+  // Trump Family & Inner Circle
+  { names: ['melania trump', 'melania'], display: 'Melania Trump', category: 'Politics' },
+  { names: ['ivanka trump', 'ivanka'], display: 'Ivanka Trump', category: 'Politics' },
+  { names: ['donald trump jr', 'don jr', 'trump jr'], display: 'Donald Trump Jr.', category: 'Politics' },
+  { names: ['eric trump'], display: 'Eric Trump', category: 'Politics' },
+  { names: ['jared kushner', 'kushner'], display: 'Jared Kushner', category: 'Politics' },
+  { names: ['barron trump', 'barron'], display: 'Barron Trump', category: 'Politics' },
+
+  // Trump Admin & Allies
+  { names: ['pam bondi', 'bondi'], display: 'Pam Bondi', category: 'Politics' },
+  { names: ['steve bannon', 'bannon'], display: 'Steve Bannon', category: 'Politics' },
+  { names: ['rudy giuliani', 'giuliani'], display: 'Rudy Giuliani', category: 'Politics' },
+  { names: ['michael flynn'], display: 'Michael Flynn', category: 'Politics' },
+  { names: ['stephen miller'], display: 'Stephen Miller', category: 'Politics' },
+  { names: ['pete hegseth', 'hegseth'], display: 'Pete Hegseth', category: 'Politics' },
+  { names: ['kash patel'], display: 'Kash Patel', category: 'Politics' },
+  { names: ['tulsi gabbard', 'tulsi', 'gabbard'], display: 'Tulsi Gabbard', category: 'Politics' },
+  { names: ['robert f kennedy', 'rfk jr', 'rfk', 'robert kennedy', 'kennedy jr'], display: 'RFK Jr.', category: 'Politics' },
+
+  // More Politicians
+  { names: ['hillary clinton', 'hillary'], display: 'Hillary Clinton', category: 'Politics' },
+  { names: ['pete buttigieg', 'buttigieg'], display: 'Pete Buttigieg', category: 'Politics' },
+  { names: ['ilhan omar', 'ilhan'], display: 'Ilhan Omar', category: 'Politics' },
+  { names: ['liz cheney'], display: 'Liz Cheney', category: 'Politics' },
+  { names: ['josh hawley', 'hawley'], display: 'Josh Hawley', category: 'Politics' },
+  { names: ['kristi noem', 'noem'], display: 'Kristi Noem', category: 'Politics' },
+  { names: ['adam schiff', 'schiff'], display: 'Adam Schiff', category: 'Politics' },
+  { names: ['al sharpton', 'sharpton'], display: 'Al Sharpton', category: 'Politics' },
+
+  // Journalists & News Anchors
+  { names: ['kaitlan collins'], display: 'Kaitlan Collins', category: 'Media' },
+  { names: ['savannah guthrie'], display: 'Savannah Guthrie', category: 'Media' },
+  { names: ['don lemon'], display: 'Don Lemon', category: 'Media' },
+  { names: ['megyn kelly', 'megyn'], display: 'Megyn Kelly', category: 'Media' },
+  { names: ['chris cuomo', 'cuomo'], display: 'Chris Cuomo', category: 'Media' },
+  { names: ['wolf blitzer', 'blitzer'], display: 'Wolf Blitzer', category: 'Media' },
+  { names: ['rachel scott'], display: 'Rachel Scott', category: 'Media' },
+
+  // Late Night / TV Hosts
+  { names: ['jimmy kimmel', 'kimmel'], display: 'Jimmy Kimmel', category: 'Entertainment' },
+  { names: ['jimmy fallon', 'fallon'], display: 'Jimmy Fallon', category: 'Entertainment' },
+  { names: ['stephen colbert', 'colbert'], display: 'Stephen Colbert', category: 'Entertainment' },
+  { names: ['john oliver'], display: 'John Oliver', category: 'Entertainment' },
+  { names: ['trevor noah'], display: 'Trevor Noah', category: 'Entertainment' },
+  { names: ['jenny mccarthy'], display: 'Jenny McCarthy', category: 'Entertainment' },
+
+  // Conservative Media / TPUSA
+  { names: ['charlie kirk'], display: 'Charlie Kirk', category: 'Media' },
+  { names: ['erika kirk'], display: 'Erika Kirk', category: 'Media' },
+  { names: ['candace owens', 'candace'], display: 'Candace Owens', category: 'Media' },
+  { names: ['ben shapiro', 'shapiro'], display: 'Ben Shapiro', category: 'Media' },
+  { names: ['matt walsh'], display: 'Matt Walsh', category: 'Media' },
+  { names: ['dan bongino', 'bongino'], display: 'Dan Bongino', category: 'Media' },
+
+  // Legal/Crime Figures
+  { names: ['jeffrey epstein', 'epstein'], display: 'Jeffrey Epstein', category: 'Legal' },
+  { names: ['ghislaine maxwell', 'maxwell'], display: 'Ghislaine Maxwell', category: 'Legal' },
+  { names: ['harvey weinstein', 'weinstein'], display: 'Harvey Weinstein', category: 'Legal' },
+  { names: ['sean combs', 'p diddy', 'diddy', 'puff daddy'], display: 'Sean "Diddy" Combs', category: 'Entertainment' },
+  { names: ['r kelly', 'r. kelly'], display: 'R. Kelly', category: 'Entertainment' },
+
+  // More Entertainment / Celebrities
+  { names: ['will smith'], display: 'Will Smith', category: 'Entertainment' },
+  { names: ['chris rock'], display: 'Chris Rock', category: 'Entertainment' },
+  { names: ['jessica mulroney', 'mulroney'], display: 'Jessica Mulroney', category: 'Entertainment' },
+  { names: ['jada pinkett smith', 'jada pinkett', 'jada'], display: 'Jada Pinkett Smith', category: 'Entertainment' },
+  { names: ['hailey bieber', 'hailey baldwin'], display: 'Hailey Bieber', category: 'Entertainment' },
+  { names: ['jennifer lopez', 'j.lo', 'jlo', 'j lo'], display: 'Jennifer Lopez', category: 'Entertainment' },
+  { names: ['ben affleck', 'affleck'], display: 'Ben Affleck', category: 'Entertainment' },
+  { names: ['alec baldwin'], display: 'Alec Baldwin', category: 'Entertainment' },
+  { names: ['sofia vergara', 'vergara'], display: 'Sofia Vergara', category: 'Entertainment' },
+  { names: ['reese witherspoon', 'reese'], display: 'Reese Witherspoon', category: 'Entertainment' },
+  { names: ['millie bobby brown'], display: 'Millie Bobby Brown', category: 'Entertainment' },
+  { names: ['tom holland', 'holland'], display: 'Tom Holland', category: 'Entertainment' },
+
+  // More Sports
+  { names: ['darron lee'], display: 'Darron Lee', category: 'Sports' },
+  { names: ['tyson fury', 'fury'], display: 'Tyson Fury', category: 'Sports' },
+  { names: ['jon jones'], display: 'Jon Jones', category: 'Sports' },
+  { names: ['giannis antetokounmpo', 'giannis'], display: 'Giannis Antetokounmpo', category: 'Sports' },
+  { names: ['nikola jokic', 'jokic'], display: 'Nikola Jokic', category: 'Sports' },
+  { names: ['josh allen'], display: 'Josh Allen', category: 'Sports' },
+  { names: ['jalen hurts', 'hurts'], display: 'Jalen Hurts', category: 'Sports' },
+
+  // News-Specific Figures
+  { names: ['nancy guthrie'], display: 'Nancy Guthrie', category: 'News' },
 ];
 
 // Build a flat list for backward compatibility and faster lookup
 const KNOWN_PERSONALITIES = PERSONALITY_DATABASE.flatMap(p => p.names);
 
-// Event/trend keywords and patterns
+// Build a Set of known display names for dedup with proper noun extraction
+const KNOWN_DISPLAY_NAMES = new Set(PERSONALITY_DATABASE.map(p => p.display.toLowerCase()));
+
+// Parse article URLs into readable text for entity/event extraction
+function parseArticleUrls(articleClicks) {
+  if (!Array.isArray(articleClicks)) return '';
+  return articleClicks
+    .map(a => {
+      try {
+        const url = a.url || '';
+        if (!url.includes('/')) return '';
+        const path = new URL(url).pathname;
+        const slug = path.split('/').filter(Boolean).pop() || '';
+        if (!slug || slug === 'www.inquisitr.com') return '';
+        // Convert slug to readable text: "donald-trump-fires-back" → "donald trump fires back"
+        return slug
+          .replace(/\?.*$/, '')          // Remove query params
+          .replace(/-/g, ' ')            // Hyphens to spaces
+          .replace(/utm.*$/, '')         // Remove UTM tracking
+          .trim();
+      } catch { return ''; }
+    })
+    .filter(Boolean)
+    .join(' . ');  // Separate articles with periods to prevent cross-article matching
+}
+
+// Proper noun extraction from well-formatted text (title/subtitle)
+// Catches names NOT in the personality database
+const NON_NAME_WORDS = new Set([
+  // Articles, conjunctions, prepositions (title-cased in headlines)
+  'the', 'this', 'that', 'these', 'those', 'from', 'into', 'over', 'under', 'with',
+  'after', 'before', 'about', 'above', 'below', 'between', 'through', 'during',
+  'just', 'plus', 'now', 'how', 'why', 'what', 'who', 'when', 'where', 'which',
+  'and', 'but', 'for', 'nor', 'yet', 'not', 'all', 'every', 'each', 'some', 'any',
+  // Common headline adjectives/nouns
+  'new', 'old', 'big', 'top', 'best', 'worst', 'first', 'last', 'next', 'great',
+  'major', 'super', 'viral', 'breaking', 'latest', 'exclusive', 'inside', 'behind',
+  'high', 'highest', 'low', 'lowest', 'more', 'most', 'half', 'full', 'total',
+  'dark', 'real', 'true', 'false', 'good', 'bad', 'strange', 'wild', 'secret',
+  // Numbers
+  'five', 'six', 'seven', 'eight', 'nine', 'ten', 'two', 'three', 'four',
+  // Common headline words
+  'stories', 'story', 'today', 'week', 'month', 'year', 'day', 'night', 'morning',
+  'chaos', 'drama', 'mystery', 'memory', 'money', 'headlines', 'edition', 'alert',
+  'attack', 'strikes', 'level', 'since', 'years', 'later', 'gets', 'man', 'woman',
+  'turn', 'turmoil', 'leadership', 'halftime', 'everyone', 'watching', 'missing',
+  'mother', 'father', 'sister', 'brother', 'family', 'recording', 'documents',
+  'celebrity', 'meltdown', 'direction', 'millions', 'gone', 'read', 'like',
+  'crime', 'novel', 'books', 'many', 'celebrities', 'reason', 'obvious',
+  'closer', 'bankruptcy', 'former', 'player', 'arrested', 'degree', 'evidence',
+  // Location/place words
+  'united', 'states', 'america', 'north', 'south', 'east', 'west', 'wall', 'street',
+  // Color words
+  'white', 'house', 'black', 'red', 'blue', 'green', 'light',
+  // Generic action words
+  'want', 'need', 'down', 'come', 'back', 'look', 'here', 'will', 'fire',
+  'staring', 'growing', 'sitting', 'making', 'getting', 'taking', 'being',
+]);
+
+function extractProperNouns(title, subtitle) {
+  const text = [title || '', subtitle || ''].join(' ');
+  // Match "Firstname Lastname" patterns (2 consecutive capitalized words)
+  const pattern = /\b([A-Z][a-z]{1,15})\s+([A-Z][a-z]{1,15})\b/g;
+  const found = new Map();
+  let match;
+
+  while ((match = pattern.exec(text)) !== null) {
+    const [, first, last] = match;
+    const fullName = `${first} ${last}`;
+    const fullNameLower = fullName.toLowerCase();
+
+    // Skip if already in personality database
+    if (KNOWN_DISPLAY_NAMES.has(fullNameLower)) continue;
+
+    // Skip if either word is a common non-name word
+    if (NON_NAME_WORDS.has(first.toLowerCase()) || NON_NAME_WORDS.has(last.toLowerCase())) continue;
+
+    // Skip very short names
+    if (first.length < 2 || last.length < 3) continue;
+
+    if (!found.has(fullName)) {
+      found.set(fullName, {
+        type: 'personality',
+        name: fullName,
+        category: 'Detected',
+        raw: fullNameLower
+      });
+    }
+  }
+
+  return Array.from(found.values());
+}
+
+// Event/trend keywords and patterns - comprehensive coverage
 const EVENT_PATTERNS = [
   // Crime/Legal
-  { pattern: /shooting|shooter|gunman|massacre/i, category: 'Crime', label: 'Shooting' },
-  { pattern: /murder|killed|homicide|slain/i, category: 'Crime', label: 'Murder/Homicide' },
-  { pattern: /arrest|arrested|charged|indicted|trial|verdict|sentenced/i, category: 'Legal', label: 'Legal/Arrest' },
-  { pattern: /scandal|controversy|accused|allegations/i, category: 'Scandal', label: 'Scandal/Controversy' },
+  { pattern: /shooting|shooter|gunman|massacre|gun\s*violence/i, category: 'Crime', label: 'Shooting' },
+  { pattern: /murder|killed|homicide|slain|stabbed|strangled/i, category: 'Crime', label: 'Murder/Homicide' },
+  { pattern: /arrest|arrested|charged|indicted|trial|verdict|sentenced|convicted|plea\s+deal/i, category: 'Legal', label: 'Legal/Arrest' },
+  { pattern: /scandal|controversy|accused|allegations|under\s+fire|backlash|outrage/i, category: 'Scandal', label: 'Scandal/Controversy' },
+  { pattern: /missing|disappear|vanish|kidnap|abduct/i, category: 'Crime', label: 'Missing Person' },
+  { pattern: /fraud|scam|ponzi|embezzle|money\s+launder/i, category: 'Crime', label: 'Fraud/Scam' },
+  { pattern: /fbi|doj|cia|dea|investigation|probe|federal\s+agent|warrant/i, category: 'Legal', label: 'Federal Investigation' },
+  { pattern: /cult|sect|extremist|radical/i, category: 'Crime', label: 'Cult/Extremism' },
+  { pattern: /pepper\s+spray|tear\s+gas|protest|riot|demonstration|march\b/i, category: 'Protest', label: 'Protest/Unrest' },
   // Immigration
-  { pattern: /ice\s+(raid|shooting|arrest|deport)|immigration|deportation|border|migrant/i, category: 'Immigration', label: 'Immigration' },
+  { pattern: /\bice\b.*?(raid|shooting|arrest|deport|protest)|immigration|deportation|border\s+(patrol|crisis|wall)|migrant|undocumented/i, category: 'Immigration', label: 'Immigration' },
   // Geopolitics
   { pattern: /greenland|arctic|territory|annex/i, category: 'Geopolitics', label: 'Territorial' },
-  { pattern: /ukraine|russia|invasion|war\s+in/i, category: 'Conflict', label: 'Ukraine/Russia' },
-  { pattern: /china|taiwan|south\s+china\s+sea/i, category: 'Geopolitics', label: 'China/Taiwan' },
-  { pattern: /israel|gaza|hamas|palestinian/i, category: 'Conflict', label: 'Israel/Gaza' },
-  { pattern: /north\s+korea|kim\s+jong|missile\s+test/i, category: 'Geopolitics', label: 'North Korea' },
+  { pattern: /ukraine|russia|invasion|war\s+in|kremlin/i, category: 'Conflict', label: 'Ukraine/Russia' },
+  { pattern: /china|taiwan|south\s+china\s+sea|beijing/i, category: 'Geopolitics', label: 'China/Taiwan' },
+  { pattern: /israel|gaza|hamas|palestinian|hezbollah/i, category: 'Conflict', label: 'Israel/Gaza' },
+  { pattern: /north\s+korea|kim\s+jong|missile\s+test|pyongyang/i, category: 'Geopolitics', label: 'North Korea' },
+  { pattern: /tariff|trade\s+war|sanction|embargo/i, category: 'Geopolitics', label: 'Trade/Sanctions' },
   // Politics
-  { pattern: /election|campaign|poll|vote|ballot/i, category: 'Politics', label: 'Election' },
-  { pattern: /impeach|resign|step\s+down/i, category: 'Politics', label: 'Impeachment/Resignation' },
+  { pattern: /election|campaign|poll\b|vote|ballot|primary|caucus/i, category: 'Politics', label: 'Election' },
+  { pattern: /impeach|resign|step\s+down|removal|censure/i, category: 'Politics', label: 'Impeachment/Resignation' },
+  { pattern: /executive\s+order|signing|veto|legislation|bill\s+pass/i, category: 'Politics', label: 'Legislation' },
+  { pattern: /maga|republican|democrat|gop|conservative|liberal|bipartisan/i, category: 'Politics', label: 'Partisan Politics' },
+  { pattern: /supreme\s+court|scotus|ruling|overturn|constitutional/i, category: 'Legal', label: 'Supreme Court' },
   // Economy
-  { pattern: /recession|inflation|interest\s+rate|fed\s+rate|stock\s+market|crash/i, category: 'Economy', label: 'Economic' },
-  { pattern: /layoff|fired|job\s+cuts|downsiz/i, category: 'Economy', label: 'Layoffs' },
+  { pattern: /recession|inflation|interest\s+rate|fed\s+rate|stock\s+market|crash|dow\s+jones/i, category: 'Economy', label: 'Economic' },
+  { pattern: /layoff|fired|job\s+cuts|downsiz|unemployment|job\s+loss/i, category: 'Economy', label: 'Layoffs' },
+  { pattern: /billion|million.*?(deal|acquisition|funding|investment|net\s+worth)/i, category: 'Economy', label: 'Big Money' },
+  { pattern: /bankruptcy|debt|default|foreclosure/i, category: 'Economy', label: 'Financial Trouble' },
   // Health
-  { pattern: /covid|pandemic|virus|outbreak|vaccine/i, category: 'Health', label: 'Health Crisis' },
+  { pattern: /covid|pandemic|virus|outbreak|vaccine|bird\s+flu|mpox/i, category: 'Health', label: 'Health Crisis' },
+  { pattern: /dementia|alzheimer|cancer|diagnosis|disease|mental\s+health/i, category: 'Health', label: 'Health/Medical' },
   // Disasters
-  { pattern: /earthquake|hurricane|tornado|flood|wildfire|disaster/i, category: 'Disaster', label: 'Natural Disaster' },
-  { pattern: /plane\s+crash|derail|explosion|collapse/i, category: 'Disaster', label: 'Accident/Disaster' },
-  // Entertainment
+  { pattern: /earthquake|hurricane|tornado|flood|wildfire|disaster|blizzard/i, category: 'Disaster', label: 'Natural Disaster' },
+  { pattern: /plane\s+crash|derail|explosion|collapse|crash\b/i, category: 'Disaster', label: 'Accident/Disaster' },
+  // Celebrity/Entertainment
   { pattern: /divorce|split|breakup|dating|engaged|married|wedding/i, category: 'Celebrity', label: 'Relationship' },
-  { pattern: /pregnant|baby|birth|child/i, category: 'Celebrity', label: 'Baby/Pregnancy' },
-  { pattern: /died|death|passed\s+away|rip|funeral|tribute/i, category: 'Death', label: 'Death/Tribute' },
-  { pattern: /oscars?|grammy|emmy|award|nomination/i, category: 'Entertainment', label: 'Awards' },
-  { pattern: /super\s+bowl|world\s+cup|olympics|championship/i, category: 'Sports', label: 'Major Sports Event' },
+  { pattern: /pregnant|baby|birth|child|expecting/i, category: 'Celebrity', label: 'Baby/Pregnancy' },
+  { pattern: /died|death|passed\s+away|rip|funeral|tribute|obituary/i, category: 'Death', label: 'Death/Tribute' },
+  { pattern: /oscars?|grammy|emmy|golden\s+globe|award|nomination|sag\s+award/i, category: 'Entertainment', label: 'Awards' },
+  { pattern: /super\s+bowl|world\s+cup|olympics|championship|world\s+series|nba\s+finals/i, category: 'Sports', label: 'Major Sports Event' },
+  { pattern: /transform|before\s+and\s+after|plastic\s+surgery|weight\s+loss|makeover/i, category: 'Celebrity', label: 'Transformation' },
+  { pattern: /documentary|film|movie|netflix|streaming|box\s+office/i, category: 'Entertainment', label: 'Film/Streaming' },
+  { pattern: /responds?|slams?|fires?\s+back|claps?\s+back|blasts?|lashes?\s+out/i, category: 'Celebrity', label: 'Celebrity Feud' },
+  { pattern: /breaks?\s+silence|speaks?\s+out|opens?\s+up|confess|reveals?|admits?/i, category: 'Celebrity', label: 'Confession/Reveal' },
+  { pattern: /\b(last\s+)?will\s+(and\s+testament|contest|cut\s+out)|estate\s+(plan|battle|fight)|inheritance|trust\s+fund/i, category: 'Legal', label: 'Estate/Inheritance' },
   // Tech
-  { pattern: /ai\s+|artificial\s+intelligence|chatgpt|openai/i, category: 'Tech', label: 'AI' },
-  { pattern: /hack|breach|leak|cyber/i, category: 'Tech', label: 'Cybersecurity' },
+  { pattern: /\bai\b|artificial\s+intelligence|chatgpt|openai|machine\s+learning/i, category: 'Tech', label: 'AI' },
+  { pattern: /hack|breach|leak|cyber|data\s+breach/i, category: 'Tech', label: 'Cybersecurity' },
   { pattern: /launch|release|announce|unveil/i, category: 'Tech', label: 'Product Launch' },
+  { pattern: /crypto|bitcoin|ethereum|blockchain|nft/i, category: 'Tech', label: 'Crypto' },
+  // Social/Viral
+  { pattern: /viral|trending|goes?\s+viral|internet\s+reacts/i, category: 'Social', label: 'Viral/Trending' },
+  { pattern: /mocked|roasted|trolled|dragged|embarrass/i, category: 'Social', label: 'Public Mockery' },
+  { pattern: /conspiracy|qanon|deep\s+state|cover.?up|whistleblow/i, category: 'Conspiracy', label: 'Conspiracy' },
 ];
 
 // Subject line format patterns
@@ -267,6 +469,7 @@ const TITLE_FORMAT_PATTERNS = [
 ];
 
 // Extract entities from text using enhanced database
+// Handles possessives (e.g. "trump's", "trumps" in URL slugs)
 function extractEntities(text) {
   if (!text) return [];
   const textLower = text.toLowerCase();
@@ -275,9 +478,9 @@ function extractEntities(text) {
   for (const personality of PERSONALITY_DATABASE) {
     // Check each name variant
     for (const name of personality.names) {
-      // Check for whole word match (with word boundary handling)
+      // Check for whole word match with optional possessive suffix
       const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`\\b${escapedName}\\b`, 'i');
+      const regex = new RegExp(`\\b${escapedName}(?:[''\u2019]?s)?\\b`, 'i');
 
       if (regex.test(textLower)) {
         // Use the canonical display name
@@ -376,28 +579,48 @@ function processPostsData(posts, periodDays) {
     const opens = parseFloat(p['Unique Opens'] || p.unique_opens || 0);
     const clicks = parseFloat(p['Unique Clicks'] || p.unique_clicks || 0);
     const title = p['Title'] || p.title || p.subject || 'Untitled';
+    const subtitle = p['Subtitle'] || p.subtitle || '';
     const subjectLine = p['Subject'] || p.subject || title;
 
-    // Extract entities and events
-    const titleEntities = extractEntities(title);
-    const subjectEntities = extractEntities(subjectLine);
-    const allEntities = [...new Map([...titleEntities, ...subjectEntities].map(e => [e.name, e])).values()];
+    // Get article clicks from the post
+    const articleClicks = p['Article Clicks'] || p['articleClicks'] || [];
 
-    const titleEvents = extractEvents(title);
-    const subjectEvents = extractEvents(subjectLine);
-    const allEvents = [...new Map([...titleEvents, ...subjectEvents].map(e => [e.label, e])).values()];
+    // Build comprehensive text corpus from ALL available content:
+    // 1. Newsletter title
+    // 2. Subtitle/preview text (often contains key names)
+    // 3. Article URL slugs (contain full article titles with entity names)
+    const articleText = parseArticleUrls(articleClicks);
+    const fullText = [title, subtitle, articleText].filter(Boolean).join(' . ');
+
+    // Extract entities from full text corpus (database matching)
+    const dbEntities = extractEntities(fullText);
+
+    // Extract proper nouns from well-formatted text (title + subtitle only)
+    // This catches trending/new names not yet in the database
+    const nounEntities = extractProperNouns(title, subtitle);
+
+    // Merge entities: database matches take priority, then proper nouns
+    const entityMap = new Map();
+    for (const e of dbEntities) entityMap.set(e.name, e);
+    for (const e of nounEntities) {
+      if (!entityMap.has(e.name)) entityMap.set(e.name, e);
+    }
+    const allEntities = Array.from(entityMap.values());
+
+    // Extract events from full text corpus
+    const allEvents = [...new Map(
+      extractEvents(fullText).map(e => [e.label, e])
+    ).values()];
 
     // Detect formats
     const subjectFormat = detectSubjectFormat(subjectLine);
     const titleFormat = detectTitleFormat(title);
 
-    // Get article clicks from the post
-    const articleClicks = p['Article Clicks'] || p['articleClicks'] || [];
-
     return {
       id: p['Post ID'] || p.id || Math.random(),
       title,
       subjectLine,
+      subtitle,
       date: new Date(p['Publish Date'] || p.publishDate),
       delivered,
       opens,
@@ -428,6 +651,7 @@ function aggregateEntityPerformance(posts) {
         entityMap.set(key, {
           name: entity.name,
           type: entity.type,
+          category: entity.category,
           posts: [],
           totalOpens: 0,
           totalClicks: 0,
@@ -584,6 +808,7 @@ function EntityPerformanceTable({ entities, title, posts = [], articles = [] }) 
             <tr>
               <th className="col-rank">#</th>
               <th className="col-title">Entity</th>
+              <th className="col-stat">Category</th>
               <th className="col-stat">Posts</th>
               <th className="col-stat">Open Rate</th>
               <th className="col-stat">CTOR</th>
@@ -603,6 +828,9 @@ function EntityPerformanceTable({ entities, title, posts = [], articles = [] }) 
                       {selectedEntity === entity.name ? '▼ ' : '▶ '}{entity.name}
                     </span>
                   </td>
+                  <td className="col-stat">
+                    <span className="category-badge">{entity.category || 'Unknown'}</span>
+                  </td>
                   <td className="col-stat">{entity.postCount}</td>
                   <td className="col-stat">
                     <span className={`stat-pill ${entity.avgOpenRate >= 35 ? 'good' : entity.avgOpenRate >= 25 ? 'ok' : 'low'}`}>
@@ -613,7 +841,7 @@ function EntityPerformanceTable({ entities, title, posts = [], articles = [] }) 
                 </tr>
                 {selectedEntity === entity.name && (
                   <tr className="entity-articles-row">
-                    <td colSpan={5}>
+                    <td colSpan={6}>
                       <div className="entity-articles-panel">
                         <div className="entity-articles-title">Top Articles for {entity.name}</div>
                         {entityArticles.length > 0 ? (

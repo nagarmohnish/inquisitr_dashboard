@@ -600,12 +600,12 @@ function App() {
               </div>
             )}
 
-            {/* Metrics Grid - Primary engagement metrics with graphs */}
+            {/* Metrics Grid - Primary engagement metrics (click to expand graph) */}
             <section>
               <h2 className="section-title">Engagement Metrics</h2>
               <div className="metrics-grid-4">
                 <MetricCardWithGraph
-                  label="New Subscribers"
+                  label="Active Subscribers"
                   value={processedData.metrics.newSubscribers.value}
                   change={processedData.metrics.newSubscribers.change}
                   changeLabel={processedData.comparisonLabel || 'vs prior'}
@@ -613,11 +613,12 @@ function App() {
                   color="blue"
                   trendData={processedData.trendData}
                   dataKey="newSubscribers"
-                  metricType="newSubscribers"
                   showPreviousDay={timePeriod === 'yesterday'}
                   previousDayValue={processedData.previousDayValues?.newSubscribers}
                   comparisonValue={processedData.showComparison ? processedData.comparisonAverages?.subscribers : undefined}
                   comparisonValueLabel={processedData.comparisonLabel}
+                  expanded={expandedMetric === 'newSubscribers'}
+                  onToggleExpand={() => setExpandedMetric(expandedMetric === 'newSubscribers' ? null : 'newSubscribers')}
                 />
                 <MetricCardWithGraph
                   label="Open Rate"
@@ -628,11 +629,12 @@ function App() {
                   color="purple"
                   trendData={processedData.trendData}
                   dataKey="openRate"
-                  metricType="openRate"
                   showPreviousDay={timePeriod === 'yesterday'}
                   previousDayValue={processedData.previousDayValues?.openRate}
                   comparisonValue={processedData.showComparison ? processedData.comparisonAverages?.openRate : undefined}
                   comparisonValueLabel={processedData.comparisonLabel}
+                  expanded={expandedMetric === 'openRate'}
+                  onToggleExpand={() => setExpandedMetric(expandedMetric === 'openRate' ? null : 'openRate')}
                 />
                 <MetricCardWithGraph
                   label="CTR"
@@ -643,11 +645,12 @@ function App() {
                   color="green"
                   trendData={processedData.trendData}
                   dataKey="ctr"
-                  metricType="ctr"
                   showPreviousDay={timePeriod === 'yesterday'}
                   previousDayValue={processedData.previousDayValues?.ctr}
                   comparisonValue={processedData.showComparison ? processedData.comparisonAverages?.ctr : undefined}
                   comparisonValueLabel={processedData.comparisonLabel}
+                  expanded={expandedMetric === 'ctr'}
+                  onToggleExpand={() => setExpandedMetric(expandedMetric === 'ctr' ? null : 'ctr')}
                 />
                 <MetricCardWithGraph
                   label="CTOR"
@@ -658,11 +661,12 @@ function App() {
                   color="pink"
                   trendData={processedData.trendData}
                   dataKey="ctor"
-                  metricType="ctor"
                   showPreviousDay={timePeriod === 'yesterday'}
                   previousDayValue={processedData.previousDayValues?.ctor}
                   comparisonValue={processedData.showComparison ? processedData.comparisonAverages?.ctor : undefined}
                   comparisonValueLabel={processedData.comparisonLabel}
+                  expanded={expandedMetric === 'ctor'}
+                  onToggleExpand={() => setExpandedMetric(expandedMetric === 'ctor' ? null : 'ctor')}
                 />
               </div>
             </section>
