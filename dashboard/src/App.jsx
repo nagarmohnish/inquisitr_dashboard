@@ -96,6 +96,7 @@ function App() {
   const [activePage, setActivePage] = useState('overview');
   const [newsletterTableFilter, setNewsletterTableFilter] = useState('all');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [subscriberView, setSubscriberView] = useState('chart');
 
   const sourceOptions = useMemo(() => {
     const options = [{ value: 'overall', label: 'All Publications' }];
@@ -709,90 +710,177 @@ function App() {
               </div>
             </section>
 
-            {/* Subscriber Growth by Source */}
+            {/* Subscriber Growth by Source - Chart/Table Toggle */}
             {processedData.subscriberGrowthBySource?.data?.length > 0 && (
               <section>
-                <h2 className="section-title">Subscriber Growth by Source</h2>
-                <SubscriberChart
-                  data={processedData.subscriberGrowthBySource.data}
-                  sources={processedData.subscriberGrowthBySource.sources}
-                  title="Daily New Subscribers"
-                  subtitle="New subscribers by acquisition channel (UTM source)"
-                  height={320}
-                />
-              </section>
-            )}
-
-            {/* Day-wise Subscriber Acquisition Table */}
-            {processedData.subscriberGrowthBySource?.data?.length > 0 && (
-              <section>
-                <h2 className="section-title">Daily Subscriber Acquisition</h2>
-                <div className="card" style={{ padding: 'var(--space-md)' }}>
-                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>
-                    Day-wise breakdown of new subscribers acquired from each source.
-                  </p>
-                  <div className="table-container" style={{ maxHeight: '500px', overflowY: 'auto', overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '2px solid var(--border-light)', position: 'sticky', top: 0, background: 'var(--bg-secondary)', zIndex: 1 }}>
-                          <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Date</th>
-                          {processedData.subscriberGrowthBySource.sources
-                            .filter(s => s !== 'total')
-                            .map(source => (
-                              <th key={source} style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>
-                                {source}
-                              </th>
-                            ))}
-                          <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '700', fontSize: '12px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...processedData.subscriberGrowthBySource.data]
-                          .reverse()
-                          .map((row, idx) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid var(--border-light)' }}>
-                              <td style={{ padding: '8px 12px', fontSize: '13px', fontWeight: '500', whiteSpace: 'nowrap' }}>
-                                {(() => { try { return format(new Date(row.date + 'T00:00:00'), 'MMM d, EEE'); } catch { return row.date; } })()}
-                              </td>
-                              {processedData.subscriberGrowthBySource.sources
-                                .filter(s => s !== 'total')
-                                .map(source => (
-                                  <td key={source} style={{
-                                    padding: '8px 12px',
-                                    textAlign: 'right',
-                                    fontSize: '13px',
-                                    color: (row[source] || 0) > 0 ? 'var(--text-primary)' : 'var(--text-muted)',
-                                    fontWeight: (row[source] || 0) > 0 ? '500' : '400'
-                                  }}>
-                                    {(row[source] || 0) > 0 ? (row[source]).toLocaleString() : '-'}
-                                  </td>
-                                ))}
-                              <td style={{ padding: '8px 12px', textAlign: 'right', fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                                {(row.total || 0).toLocaleString()}
-                              </td>
-                            </tr>
-                          ))}
-                        {/* Totals row */}
-                        <tr style={{ borderTop: '2px solid var(--border-light)', background: 'var(--bg-tertiary)', position: 'sticky', bottom: 0 }}>
-                          <td style={{ padding: '10px 12px', fontSize: '13px', fontWeight: '700' }}>Total</td>
-                          {processedData.subscriberGrowthBySource.sources
-                            .filter(s => s !== 'total')
-                            .map(source => {
-                              const sourceTotal = processedData.subscriberGrowthBySource.data.reduce((sum, row) => sum + (row[source] || 0), 0);
-                              return (
-                                <td key={source} style={{ padding: '10px 12px', textAlign: 'right', fontSize: '13px', fontWeight: '700' }}>
-                                  {sourceTotal > 0 ? sourceTotal.toLocaleString() : '-'}
-                                </td>
-                              );
-                            })}
-                          <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '13px', fontWeight: '700' }}>
-                            {processedData.subscriberGrowthBySource.data.reduce((sum, row) => sum + (row.total || 0), 0).toLocaleString()}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-sm)' }}>
+                  <h2 className="section-title" style={{ marginBottom: 0 }}>Subscriber Growth by Source</h2>
+                  <div style={{
+                    display: 'inline-flex',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-light)',
+                    overflow: 'hidden',
+                    fontSize: '12px'
+                  }}>
+                    <button
+                      onClick={() => setSubscriberView('chart')}
+                      style={{
+                        padding: '5px 12px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: subscriberView === 'chart' ? '600' : '400',
+                        background: subscriberView === 'chart' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                        color: subscriberView === 'chart' ? '#fff' : 'var(--text-secondary)',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >Chart</button>
+                    <button
+                      onClick={() => setSubscriberView('table')}
+                      style={{
+                        padding: '5px 12px',
+                        border: 'none',
+                        borderLeft: '1px solid var(--border-light)',
+                        cursor: 'pointer',
+                        fontWeight: subscriberView === 'table' ? '600' : '400',
+                        background: subscriberView === 'table' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                        color: subscriberView === 'table' ? '#fff' : 'var(--text-secondary)',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >Table</button>
                   </div>
                 </div>
+
+                {subscriberView === 'chart' ? (
+                  <SubscriberChart
+                    data={processedData.subscriberGrowthBySource.data}
+                    sources={processedData.subscriberGrowthBySource.sources}
+                    title="Daily New Subscribers"
+                    subtitle="New subscribers by acquisition channel (UTM source)"
+                    height={320}
+                  />
+                ) : (
+                  <div className="card" style={{ padding: 'var(--space-md)', overflow: 'hidden' }}>
+                    {(() => {
+                      const days = [...processedData.subscriberGrowthBySource.data].reverse();
+                      const sources = processedData.subscriberGrowthBySource.sources.filter(s => s !== 'total');
+                      const allTimeCounts = {};
+                      (processedData.sourceWiseSubscribers || []).forEach(s => {
+                        allTimeCounts[s.source.toLowerCase()] = s.count;
+                      });
+
+                      const handleExportCSV = () => {
+                        const dateHeaders = days.map(row => {
+                          try { return format(new Date(row.date + 'T00:00:00'), 'yyyy-MM-dd'); } catch { return row.date; }
+                        });
+                        const rows = [];
+                        rows.push(['Source', 'All-time Subs', ...dateHeaders, 'Period Total'].join(','));
+                        sources.forEach(source => {
+                          const allTime = allTimeCounts[source] || 0;
+                          const dailyValues = days.map(row => row[source] || 0);
+                          const periodTotal = dailyValues.reduce((a, b) => a + b, 0);
+                          rows.push([`"${source}"`, allTime, ...dailyValues, periodTotal].join(','));
+                        });
+                        const totalDaily = days.map(row => row.total || 0);
+                        const grandTotal = totalDaily.reduce((a, b) => a + b, 0);
+                        const allTimeGrand = (processedData.sourceWiseSubscribers || []).reduce((s, r) => s + r.count, 0);
+                        rows.push(['Total', allTimeGrand, ...totalDaily, grandTotal].join(','));
+                        const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `subscriber-growth-by-source-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      };
+
+                      return (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
+                            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
+                              Day-wise breakdown of new subscribers acquired from each source.
+                            </p>
+                            <button
+                              onClick={handleExportCSV}
+                              style={{
+                                padding: '5px 12px',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                border: '1px solid var(--border-light)',
+                                borderRadius: 'var(--radius-sm)',
+                                background: 'var(--bg-secondary)',
+                                color: 'var(--text-secondary)',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                                transition: 'all 0.15s ease'
+                              }}
+                            >Export CSV</button>
+                          </div>
+                          <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '500px' }}>
+                            <table style={{ borderCollapse: 'collapse', minWidth: 'max-content' }}>
+                              <thead>
+                                <tr style={{ borderBottom: '2px solid var(--border-light)' }}>
+                                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: '600', fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', position: 'sticky', left: 0, top: 0, background: 'var(--bg-secondary)', zIndex: 3, minWidth: '180px' }}>
+                                    <div>Source</div>
+                                    <div style={{ fontWeight: '400', fontSize: '10px', color: 'var(--text-muted)' }}>All-time count</div>
+                                  </th>
+                                  {days.map((row, idx) => (
+                                    <th key={idx} style={{ padding: '10px 8px', textAlign: 'right', fontWeight: '500', fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: 'var(--bg-secondary)', zIndex: 2 }}>
+                                      {(() => { try { return format(new Date(row.date + 'T00:00:00'), 'MMM d'); } catch { return row.date; } })()}
+                                    </th>
+                                  ))}
+                                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: '700', fontSize: '12px', color: 'var(--text-primary)', whiteSpace: 'nowrap', position: 'sticky', right: 0, top: 0, background: 'var(--bg-secondary)', zIndex: 3 }}>Period Total</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {sources.map(source => {
+                                  const periodTotal = days.reduce((sum, row) => sum + (row[source] || 0), 0);
+                                  const allTimeCount = allTimeCounts[source] || 0;
+                                  return (
+                                    <tr key={source} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap', position: 'sticky', left: 0, background: 'var(--bg-secondary)', zIndex: 1 }}>
+                                        <div style={{ fontSize: '13px', fontWeight: '500' }}>{source}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{allTimeCount.toLocaleString()} subs</div>
+                                      </td>
+                                      {days.map((row, idx) => (
+                                        <td key={idx} style={{
+                                          padding: '8px 8px',
+                                          textAlign: 'right',
+                                          fontSize: '13px',
+                                          color: (row[source] || 0) > 0 ? 'var(--text-primary)' : 'var(--text-muted)',
+                                          fontWeight: (row[source] || 0) > 0 ? '500' : '400'
+                                        }}>
+                                          {(row[source] || 0) > 0 ? (row[source]).toLocaleString() : '-'}
+                                        </td>
+                                      ))}
+                                      <td style={{ padding: '8px 12px', textAlign: 'right', fontSize: '13px', fontWeight: '700', position: 'sticky', right: 0, background: 'var(--bg-secondary)', zIndex: 1 }}>
+                                        {periodTotal > 0 ? periodTotal.toLocaleString() : '-'}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                                {/* Total row */}
+                                <tr style={{ borderTop: '2px solid var(--border-light)', background: 'var(--bg-tertiary)' }}>
+                                  <td style={{ padding: '10px 12px', position: 'sticky', left: 0, background: 'var(--bg-tertiary)', zIndex: 1 }}>
+                                    <div style={{ fontSize: '13px', fontWeight: '700' }}>Total</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{(processedData.sourceWiseSubscribers || []).reduce((s, r) => s + r.count, 0).toLocaleString()} subs</div>
+                                  </td>
+                                  {days.map((row, idx) => (
+                                    <td key={idx} style={{ padding: '8px 8px', textAlign: 'right', fontSize: '13px', fontWeight: '700' }}>
+                                      {(row.total || 0) > 0 ? (row.total).toLocaleString() : '-'}
+                                    </td>
+                                  ))}
+                                  <td style={{ padding: '10px 12px', textAlign: 'right', fontSize: '13px', fontWeight: '700', position: 'sticky', right: 0, background: 'var(--bg-tertiary)', zIndex: 1 }}>
+                                    {days.reduce((sum, row) => sum + (row.total || 0), 0).toLocaleString()}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
               </section>
             )}
 

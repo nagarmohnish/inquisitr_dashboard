@@ -5,17 +5,28 @@ import {
   ResponsiveContainer, Legend
 } from 'recharts';
 
-// Distinct color palette for UTM sources - professional but distinguishable
+// Distinct color palette for acquisition sources (channel: source: medium)
 const SOURCE_COLORS = {
-  direct: '#18181b',     // Black - primary/direct
-  ml2: '#2563eb',        // Blue - paid source 1
-  ml3: '#7c3aed',        // Purple - paid source 2
-  website: '#0891b2',    // Cyan - website traffic
-  referral: '#059669',   // Emerald - referrals
-  organic: '#ca8a04',    // Yellow/Gold - organic
-  other: '#71717a',      // Gray - other
-  total: '#dc2626'       // Red - total (standout)
+  'api: ml2: none': '#2563eb',                        // Blue
+  'import: direct: none': '#18181b',                   // Black
+  'api: ml2.275: none': '#60a5fa',                     // Light blue
+  'api: lh2 da: lh2 da': '#f59e0b',                   // Amber
+  'api: direct: none': '#6b7280',                      // Gray
+  'api: ml3: none': '#7c3aed',                         // Purple
+  'api: sso: sso': '#059669',                          // Emerald
+  'api: lh2 email capture: lh2 email capture': '#06b6d4', // Cyan
+  'import: lh2 da: lh2 da': '#d97706',                // Dark amber
+  'api: website: popup': '#ec4899',                    // Pink
+  'api: website: embedded': '#f97316',                 // Orange
+  'api: website: landing page': '#84cc16',             // Lime
+  total: '#dc2626'                                     // Red - total
 };
+
+// Fallback color generator for unknown sources
+const FALLBACK_COLORS = ['#8b5cf6', '#14b8a6', '#f43f5e', '#0ea5e9', '#a855f7', '#22c55e'];
+function getSourceColor(source, index) {
+  return SOURCE_COLORS[source] || FALLBACK_COLORS[index % FALLBACK_COLORS.length] || '#71717a';
+}
 
 function formatXAxis(dateStr, granularity) {
   const date = new Date(dateStr);
@@ -133,18 +144,21 @@ export default function SubscriberChart({
                 </span>
               )}
             />
-            {visibleSources.map(source => (
-              <Line
-                key={source}
-                type="linear"
-                dataKey={source}
-                name={source.charAt(0).toUpperCase() + source.slice(1)}
-                stroke={SOURCE_COLORS[source] || SOURCE_COLORS.other}
-                strokeWidth={source === 'total' ? 2.5 : 1.5}
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff', fill: SOURCE_COLORS[source] || SOURCE_COLORS.other }}
-              />
-            ))}
+            {visibleSources.map((source, idx) => {
+              const color = getSourceColor(source, idx);
+              return (
+                <Line
+                  key={source}
+                  type="linear"
+                  dataKey={source}
+                  name={source}
+                  stroke={color}
+                  strokeWidth={source === 'total' ? 2.5 : 1.5}
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff', fill: color }}
+                />
+              );
+            })}
           </LineChart>
         </ResponsiveContainer>
       </div>

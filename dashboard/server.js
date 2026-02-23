@@ -20,7 +20,7 @@ const CONFIG = {
   API_KEY: process.env.BEEHIIV_API_KEY || 'aUIfwXllHrpVDbCFu9kTuJdWxvwwVALTqeGGC2TLWPY1zF3ZlMed0bYD0iEe5EGM',
   API_BASE_URL: 'https://api.beehiiv.com/v2',
   CONTENT_DOMAINS: ['inquisitr.com', 'www.inquisitr.com'],
-  RATE_LIMIT_DELAY_MS: 200,
+  RATE_LIMIT_DELAY_MS: 350,
   MAX_PER_PAGE: 100,
   CACHE_FILE: path.join(__dirname, 'data-cache.json'),
   REFRESH_INTERVAL_MS: parseInt(process.env.REFRESH_INTERVAL_HOURS || '2', 10) * 60 * 60 * 1000 // Default 2 hours, configurable
@@ -75,11 +75,11 @@ async function makeApiRequest(endpoint, params = {}, retryCount = 0) {
   const response = await fetch(url.toString(), { headers: HEADERS });
 
   if (response.status === 429) {
-    if (retryCount >= 3) {
+    if (retryCount >= 5) {
       throw new Error(`Rate limited after ${retryCount} retries on ${endpoint}`);
     }
-    const waitTime = 30000 * (retryCount + 1); // 30s, 60s, 90s
-    console.log(`  Rate limited on ${endpoint}, retry ${retryCount + 1}/3, waiting ${waitTime / 1000}s...`);
+    const waitTime = 15000 * (retryCount + 1); // 15s, 30s, 45s, 60s, 75s
+    console.log(`  Rate limited on ${endpoint}, retry ${retryCount + 1}/5, waiting ${waitTime / 1000}s...`);
     await delay(waitTime);
     return makeApiRequest(endpoint, params, retryCount + 1);
   }
@@ -250,6 +250,7 @@ function processSubscriberData(sub, pubName) {
     publicationName: pubName,
     utmSource: sub.utm_source || 'direct',
     utmMedium: sub.utm_medium || '',
+    utmChannel: sub.utm_channel || 'api',
     utmCampaign: sub.utm_campaign || '',
     emailsReceived: stats.emails_received || stats.total_emails || 0,
     openRate: openRate,
@@ -406,6 +407,20 @@ async function fetchAllData() {
       } catch (e) {
         console.error(`    ERROR fetching ${pubName}: ${e.message}`);
         console.error(`    Stack: ${e.stack?.split('\n')[1]?.trim()}`);
+
+        // If a publication fails, recover its data from old cache so we don't lose it
+        const oldCache = loadCache();
+        if (oldCache) {
+          const oldPosts = (oldCache.posts || []).filter(p => p.publicationName === pubName);
+          const oldSubs = (oldCache.subscribers || []).filter(s => s.publicationName === pubName);
+          const oldSegs = (oldCache.segments || []).filter(s => s.publicationName === pubName);
+          if (oldPosts.length > 0 || oldSubs.length > 0) {
+            allPosts.push(...oldPosts);
+            allSubscribers.push(...oldSubs);
+            allSegments.push(...oldSegs);
+            console.log(`    Recovered from cache: ${oldPosts.length} posts, ${oldSubs.length} subscribers for ${pubName}`);
+          }
+        }
       }
     }
 

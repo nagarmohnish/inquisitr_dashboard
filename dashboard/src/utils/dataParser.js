@@ -426,17 +426,18 @@ export function calculateSubscriberGrowthBySource(subscribers, dateRange = null)
     }
 
     const dateKey = format(date, 'yyyy-MM-dd');
-    const source = (sub['UTM Source'] || sub['utmSource'] || 'direct').toLowerCase();
+    const utmSource = sub['UTM Source'] || sub['utmSource'] || 'direct';
+    const utmMedium = sub['UTM Medium'] || sub['utmMedium'] || '';
+    const utmChannel = sub['UTM Channel'] || sub['utmChannel'] || 'api';
 
-    // Normalize common source names
-    const normalizedSource = normalizeSourceName(source);
-    allSources.add(normalizedSource);
+    const sourceKey = getAcquisitionSourceKey(utmSource, utmMedium, utmChannel);
+    allSources.add(sourceKey);
 
     if (!dailyBySource[dateKey]) {
       dailyBySource[dateKey] = { date: dateKey };
     }
 
-    dailyBySource[dateKey][normalizedSource] = (dailyBySource[dateKey][normalizedSource] || 0) + 1;
+    dailyBySource[dateKey][sourceKey] = (dailyBySource[dateKey][sourceKey] || 0) + 1;
   });
 
   // Convert to array and sort by date
@@ -466,24 +467,21 @@ export function calculateSubscriberGrowthBySource(subscribers, dateRange = null)
 }
 
 /**
- * Normalize UTM source names for consistent grouping
+ * Build acquisition source key matching Beehiiv's "channel: source: medium" format.
+ * e.g. "api: ml2: none", "import: direct: none", "api: website: popup"
  */
-function normalizeSourceName(source) {
-  if (!source) return 'direct';
+function getAcquisitionSourceKey(utmSource, utmMedium, utmChannel) {
+  const ch = (utmChannel || 'api').toLowerCase().trim();
+  const src = (utmSource || 'direct').toLowerCase().trim();
+  const med = (utmMedium || '').toLowerCase().trim();
 
-  const normalized = source.toLowerCase().trim();
+  // Normalize source
+  const normalizedSrc = (!src || src === 'null' || src === 'undefined') ? 'direct' : src;
 
-  // Map common variations to standard names
-  if (normalized === '' || normalized === 'null' || normalized === 'undefined') return 'direct';
-  if (normalized.includes('ml2') || normalized.includes('mailerlite2')) return 'ml2';
-  if (normalized.includes('ml3') || normalized.includes('mailerlite3')) return 'ml3';
-  if (normalized.includes('website') || normalized.includes('web')) return 'website';
-  if (normalized.includes('referral') || normalized.includes('refer')) return 'referral';
-  if (normalized.includes('organic') || normalized.includes('search')) return 'organic';
-  if (normalized.includes('direct') || normalized === 'none') return 'direct';
+  // Normalize medium - show "none" when empty to match Beehiiv
+  const normalizedMed = (!med || med === 'null' || med === 'undefined') ? 'none' : med;
 
-  // Keep other sources as-is if they appear frequently
-  return normalized.length > 15 ? normalized.substring(0, 15) : normalized;
+  return `${ch}: ${normalizedSrc}: ${normalizedMed}`;
 }
 
 /**
@@ -544,8 +542,11 @@ export function calculateSourceWiseSubscribers(subscribers, dateRange = null) {
       }
     }
 
-    const source = normalizeSourceName(sub['UTM Source'] || sub['utmSource'] || 'direct');
-    sourceMap[source] = (sourceMap[source] || 0) + 1;
+    const utmSource = sub['UTM Source'] || sub['utmSource'] || 'direct';
+    const utmMedium = sub['UTM Medium'] || sub['utmMedium'] || '';
+    const utmChannel = sub['UTM Channel'] || sub['utmChannel'] || 'api';
+    const sourceKey = getAcquisitionSourceKey(utmSource, utmMedium, utmChannel);
+    sourceMap[sourceKey] = (sourceMap[sourceKey] || 0) + 1;
     totalFiltered++;
   });
 
